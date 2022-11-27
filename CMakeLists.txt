@@ -51,3 +51,31 @@ find_package(CUDAToolkit REQUIRED)
 
 # Spdlog
 include(openposert/external/spdlog)
+
+# openposert
+add_library(${PROJECT_NAME}
+  src/core/array.cpp
+  src/core/point.cpp
+  src/core/rectangle.cpp
+
+  src/net/body_part_connector.cpp
+  src/net/body_part_connector.cu
+  src/net/nms.cu
+  src/net/resize_and_merge.cu
+
+  src/pose/pose_parameters.cpp
+
+  src/utilities/keypoint.cpp
+)
+
+target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  ${PROJECT_SOURCE_DIR}/include
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  spdlog::spdlog
+  CUDA::cudart
+)
