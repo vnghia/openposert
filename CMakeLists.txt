@@ -52,6 +52,9 @@ find_package(CUDAToolkit REQUIRED)
 # Spdlog
 include(openposert/external/spdlog)
 
+# Cxxopts
+include(openposert/external/cxxopts)
+
 # openposert
 add_library(${PROJECT_NAME}
   src/core/array.cpp
