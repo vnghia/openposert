@@ -66,12 +66,16 @@ add_library(${PROJECT_NAME}
 
   src/net/body_part_connector.cpp
   src/net/body_part_connector.cu
+  src/net/input_preprocessing.cpp
+  src/net/input_preprocessing.cu
   src/net/nms.cu
+  src/net/reoder_and_normalize.cu
   src/net/resize_and_merge.cu
 
   src/pose/pose_parameters.cpp
 
   src/utilities/keypoint.cpp
+  src/utilities/opencv.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_17)
@@ -79,9 +83,13 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/include
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
   spdlog::spdlog
   CUDA::cudart
+  ${OpenCV_LIBS}
 )
+
+target_link_directories(${PROJECT_NAME} PUBLIC ${OpenCV_LIB_DIR})
