@@ -48,3 +48,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_ROOT_DIR}/bin/${CMAKE_BUILD_TYPE}"
 
 # CUDA
 find_package(CUDAToolkit REQUIRED)
+
+# Spdlog
+include(openposert/external/spdlog)
