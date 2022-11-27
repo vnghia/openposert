@@ -55,6 +55,9 @@ include(openposert/external/spdlog)
 # Cxxopts
 include(openposert/external/cxxopts)
 
+# OpenCV
+find_package(OpenCV REQUIRED)
+
 # openposert
 add_library(${PROJECT_NAME}
   src/core/array.cpp
