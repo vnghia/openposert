@@ -58,6 +58,9 @@ include(openposert/external/cxxopts)
 # OpenCV
 find_package(OpenCV REQUIRED)
 
+# MinRT
+include(openposert/external/minrt)
+
 # openposert
 add_library(${PROJECT_NAME}
   src/core/array.cpp
@@ -90,6 +93,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   spdlog::spdlog
   CUDA::cudart
   ${OpenCV_LIBS}
+  minrt
 )
 
 target_link_directories(${PROJECT_NAME} PUBLIC ${OpenCV_LIB_DIR})
