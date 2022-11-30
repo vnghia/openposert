@@ -118,6 +118,73 @@ __global__ void paf_score_kernel(
 }
 
 template <typename T>
+std::vector<std::tuple<T, T, int, int, int>> paf_ptr_into_vector_gpu(
+    const T* const pair_scores, const T* const peaks_ptr, const int max_peaks,
+    const std::vector<unsigned int>& body_part_pairs,
+    const unsigned int number_body_part_pairs) {
+  try {
+    // result is a std::vector<std::tuple<double, double, int, int, int>> with:
+    // (total_score, pa_fscore, pair_index, index_a, index_b)
+    // total_score is first to simplify later sorting
+    std::vector<std::tuple<T, T, int, int, int>> pair_connections;
+
+    // get all paf pairs in a single std::vector
+    const auto peaks_offset = 3 * (max_peaks + 1);
+    for (auto pair_index = 0u; pair_index < number_body_part_pairs;
+         pair_index++) {
+      const auto body_part_a = body_part_pairs[2 * pair_index];
+      const auto body_part_b = body_part_pairs[2 * pair_index + 1];
+      const auto* candidate_a_ptr = peaks_ptr + body_part_a * peaks_offset;
+      const auto* candidate_b_ptr = peaks_ptr + body_part_b * peaks_offset;
+      const auto number_peaks_a = positive_int_round(candidate_a_ptr[0]);
+      const auto number_peaks_b = positive_int_round(candidate_b_ptr[0]);
+      const auto first_index = (int)pair_index * max_peaks * max_peaks;
+      // e.g., neck-nose connection. for each neck
+      for (auto index_a = 0; index_a < number_peaks_a; index_a++) {
+        const auto i_index = first_index + index_a * max_peaks;
+        // e.g., neck-nose connection. for each nose
+        for (auto index_b = 0; index_b < number_peaks_b; index_b++) {
+          const auto score_ab = pair_scores[i_index + index_b];
+
+          // e.g., neck-nose connection. if possible paf between neck index_a,
+          // nose index_b --> add parts score + connection score
+          if (score_ab > 1e-6) {
+            // total_score - only used for sorting
+            // // original total_score
+            // const auto total_score = score_ab;
+            // improved total_score
+            // improved to avoid too much weight in the paf between 2 elements,
+            // adding some weight on their confidence (avoid connecting high
+            // pa_fs on very low-confident keypoints)
+            const auto index_score_a =
+                body_part_a * peaks_offset + (index_a + 1) * 3 + 2;
+            const auto index_score_b =
+                body_part_b * peaks_offset + (index_b + 1) * 3 + 2;
+            const auto total_score = score_ab +
+                                     T(0.1) * peaks_ptr[index_score_a] +
+                                     T(0.1) * peaks_ptr[index_score_b];
+            // +1 because peaks_ptr starts with counter
+            pair_connections.emplace_back(std::make_tuple(
+                total_score, score_ab, pair_index, index_a + 1, index_b + 1));
+          }
+        }
+      }
+    }
+
+    // sort rows in descending order based on its first element (`total_score`)
+    if (!pair_connections.empty())
+      std::sort(pair_connections.begin(), pair_connections.end(),
+                std::greater<std::tuple<double, double, int, int, int>>());
+
+    // return result
+    return pair_connections;
+  } catch (const std::exception& e) {
+    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+    return {};
+  }
+}
+
+template <typename T>
 void connect_body_parts_gpu(
     Array<T>& pose_keypoints, Array<T>& pose_scores,
     const T* const heat_map_gpu_ptr, const T* const peaks_ptr,
@@ -125,8 +192,8 @@ void connect_body_parts_gpu(
     const int max_peaks, const T inter_min_above_threshold,
     const T inter_threshold, const int min_subset_cnt, const T min_subset_score,
     const T default_nms_threshold, const T scale_factor,
-    const bool maximize_positives, Array<T> pair_scores_cpu,
-    T* pair_scores_gpu_ptr, const unsigned int* const body_part_pairs_gpu_ptr,
+    const bool maximize_positives, T* pair_scores_gpu_ptr,
+    const unsigned int* const body_part_pairs_gpu_ptr,
     const unsigned int* const map_idx_gpu_ptr, const T* const peaks_gpu_ptr) {
   try {
     // parts connection
@@ -134,7 +201,6 @@ void connect_body_parts_gpu(
     const auto number_body_parts = get_pose_number_body_parts(pose_model);
     const auto number_body_part_pairs =
         (unsigned int)(body_part_pairs.size() / 2);
-    const auto total_computations = pair_scores_cpu.get_volume();
 
     if (number_body_parts == 0)
       error("invalid value of number_body_parts, it must be positive, not " +
@@ -156,15 +222,11 @@ void connect_body_parts_gpu(
         body_part_pairs_gpu_ptr, map_idx_gpu_ptr, max_peaks,
         (int)number_body_part_pairs, heat_map_size.x, heat_map_size.y,
         inter_threshold, inter_min_above_threshold, default_nms_threshold);
-    // pair_scores_cpu <-- pair_scores_gpu
-    cudaMemcpy(pair_scores_cpu.get_ptr(), pair_scores_gpu_ptr,
-               total_computations * sizeof(T), cudaMemcpyDeviceToHost);
-    // op_profile_end(time_normalize2, 1e3, reps);
 
     // get pair connections and their scores
     const auto pair_connections =
-        paf_ptr_into_vector(pair_scores_cpu, peaks_ptr, max_peaks,
-                            body_part_pairs, number_body_part_pairs);
+        paf_ptr_into_vector_gpu(pair_scores_gpu_ptr, peaks_ptr, max_peaks,
+                                body_part_pairs, number_body_part_pairs);
     auto people_vector =
         paf_vector_into_people_vector(pair_connections, peaks_ptr, max_peaks,
                                       body_part_pairs, number_body_parts);
@@ -212,7 +274,7 @@ template void connect_body_parts_gpu(
     const float inter_threshold, const int min_subset_cnt,
     const float min_subset_score, const float scale_factor,
     const float default_nms_threshold, const bool maximize_positives,
-    Array<float> pair_scores_cpu, float* pair_scores_gpu_ptr,
+    float* pair_scores_gpu_ptr,
     const unsigned int* const body_part_pairs_gpu_ptr,
     const unsigned int* const map_idx_gpu_ptr,
     const float* const peaks_gpu_ptr);
@@ -225,7 +287,7 @@ template void connect_body_parts_gpu(
     const double inter_threshold, const int min_subset_cnt,
     const double min_subset_score, const double scale_factor,
     const double default_nms_threshold, const bool maximize_positives,
-    Array<double> pair_scores_cpu, double* pair_scores_gpu_ptr,
+    double* pair_scores_gpu_ptr,
     const unsigned int* const body_part_pairs_gpu_ptr,
     const unsigned int* const map_idx_gpu_ptr,
     const double* const peaks_gpu_ptr);

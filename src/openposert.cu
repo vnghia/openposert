@@ -110,9 +110,6 @@ void OpenPoseRT::malloc_memory() {
       number_body_part_pairs * max_person_ * max_person_ * sizeof(float);
   pair_scores_data_ = cuda_malloc_managed(peaks_score_size);
   spdlog::info("allocated {} byte for peaks score data", peaks_score_size);
-  pair_scores_cpu_.reset(
-      std::vector<int>{number_body_part_pairs, max_person_, max_person_},
-      static_cast<float *>(pair_scores_data_.get()));
 }
 
 void OpenPoseRT::forward() {
@@ -135,7 +132,7 @@ void OpenPoseRT::forward() {
       static_cast<float *>(peaks_data_.get()), PoseModel::BODY_25,
       net_output_size, max_person_, inter_min_above_threshold_,
       inter_threshold_, min_subset_cnt_, min_subset_score_, nms_threshold_, 1.f,
-      false, pair_scores_cpu_, static_cast<float *>(pair_scores_data_.get()),
+      false, static_cast<float *>(pair_scores_data_.get()),
       static_cast<unsigned int *>(body_part_pair_gpu_.get()),
       static_cast<unsigned int *>(pose_map_idx_gpu_.get()),
       static_cast<float *>(peaks_data_.get()));

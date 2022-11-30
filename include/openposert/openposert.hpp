@@ -78,7 +78,6 @@ class OpenPoseRT {
   std::vector<unsigned int> pose_map_idx_;
   std::shared_ptr<void> pose_map_idx_gpu_;
 
-  Array<float> pair_scores_cpu_;
   std::shared_ptr<void> pair_scores_data_;
 
   Array<float> pose_keypoints_;

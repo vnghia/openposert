@@ -27,8 +27,8 @@ void connect_body_parts_gpu(
     const int max_peaks, const T inter_min_above_threshold,
     const T inter_threshold, const int min_subset_cnt, const T min_subset_score,
     const T default_nms_threshold, const T scale_factor,
-    const bool maximize_positives, Array<T> pair_scores_cpu,
-    T* pair_scores_gpu_ptr, const unsigned int* const body_part_pairs_gpu_ptr,
+    const bool maximize_positives, T* pair_scores_gpu_ptr,
+    const unsigned int* const body_part_pairs_gpu_ptr,
     const unsigned int* const map_idx_gpu_ptr, const T* const peaks_gpu_ptr);
 
 // private functions used by the 2 above functions
@@ -62,6 +62,12 @@ void people_vector_to_people_array(
 template <typename T>
 std::vector<std::tuple<T, T, int, int, int>> paf_ptr_into_vector(
     const Array<T>& pair_scores, const T* const peaks_ptr, const int max_peaks,
+    const std::vector<unsigned int>& body_part_pairs,
+    const unsigned int number_body_part_pairs);
+
+template <typename T>
+std::vector<std::tuple<T, T, int, int, int>> paf_ptr_into_vector_gpu(
+    const T* const pair_scores, const T* const peaks_ptr, const int max_peaks,
     const std::vector<unsigned int>& body_part_pairs,
     const unsigned int number_body_part_pairs);
 
