@@ -79,6 +79,8 @@ add_library(${PROJECT_NAME}
 
   src/utilities/keypoint.cpp
   src/utilities/opencv.cpp
+
+  src/openposert.cu
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_17)
@@ -97,3 +99,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 )
 
 target_link_directories(${PROJECT_NAME} PUBLIC ${OpenCV_LIB_DIR})
+
+# cli
+add_executable(cli
+  sample/cli.cpp
+)
+
+target_link_libraries(cli PUBLIC
+  ${PROJECT_NAME}
+  cxxopts::cxxopts
+)
