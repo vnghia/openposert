@@ -110,6 +110,17 @@ void OpenPoseRT::malloc_memory() {
       number_body_part_pairs * max_person_ * max_person_ * sizeof(float);
   pair_scores_data_ = cuda_malloc_managed(peaks_score_size);
   spdlog::info("allocated {} byte for peaks score data", peaks_score_size);
+
+  auto pose_keypoints_size = max_person_ *
+                             get_pose_number_body_parts(pose_model_) *
+                             peak_dim_ * sizeof(float);
+  pose_keypoints_data_ = cuda_malloc_managed(pose_keypoints_size);
+  spdlog::info("allocated {} byte for pose keypoints data",
+               pose_keypoints_size);
+
+  auto pose_scores_size = max_person_ * sizeof(float);
+  pose_scores_data_ = cuda_malloc_managed(pose_scores_size);
+  spdlog::info("allocated {} byte for pose scores data", pose_scores_size);
 }
 
 void OpenPoseRT::forward() {
@@ -127,12 +138,13 @@ void OpenPoseRT::forward() {
                                 engine_.get_output_dim(0).d[2]};
 
   connect_body_parts_gpu(
-      pose_keypoints_, pose_scores_,
+      static_cast<float *>(pose_keypoints_data_.get()),
+      static_cast<float *>(pose_scores_data_.get()), number_people_,
       static_cast<float *>(net_output_data_.get()),
-      static_cast<float *>(peaks_data_.get()), PoseModel::BODY_25,
-      net_output_size, max_person_, inter_min_above_threshold_,
-      inter_threshold_, min_subset_cnt_, min_subset_score_, nms_threshold_, 1.f,
-      false, static_cast<float *>(pair_scores_data_.get()),
+      static_cast<float *>(peaks_data_.get()), pose_model_, net_output_size,
+      max_person_, inter_min_above_threshold_, inter_threshold_,
+      min_subset_cnt_, min_subset_score_, nms_threshold_, 1.f, false,
+      static_cast<float *>(pair_scores_data_.get()),
       static_cast<unsigned int *>(body_part_pair_gpu_.get()),
       static_cast<unsigned int *>(pose_map_idx_gpu_.get()),
       static_cast<float *>(peaks_data_.get()));

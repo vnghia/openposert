@@ -21,7 +21,7 @@ void connect_body_parts_cpu(
 
 template <typename T>
 void connect_body_parts_gpu(
-    Array<T>& pose_keypoints, Array<T>& pose_scores,
+    T* pose_keypoints, T* pose_scores, int& number_people,
     const T* const heat_map_gpu_ptr, const T* const peaks_ptr,
     const PoseModel pose_model, const Point<int>& heat_map_size,
     const int max_peaks, const T inter_min_above_threshold,
@@ -55,6 +55,14 @@ template <typename T>
 void people_vector_to_people_array(
     Array<T>& pose_keypoints, Array<T>& pose_scores, const T scale_factor,
     const std::vector<std::pair<std::vector<int>, T>>& subsets,
+    const std::vector<int>& valid_subset_indexes, const T* const peaks_ptr,
+    const int number_people, const unsigned int number_body_parts,
+    const unsigned int number_body_part_pairs);
+
+template <typename T>
+void people_vector_to_people_array_gpu(
+    T* pose_keypoints, T* pose_scores, const T scale_factor,
+    const std::vector<std::pair<std::vector<int>, T>>& people_vector,
     const std::vector<int>& valid_subset_indexes, const T* const peaks_ptr,
     const int number_people, const unsigned int number_body_parts,
     const unsigned int number_body_part_pairs);

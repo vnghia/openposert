@@ -40,8 +40,8 @@ int main(int argc, char* argv[]) {
   while (cap.read(frame)) {
     openposert.forward();
     const auto& pose_key_points = openposert.get_pose_keypoints();
-    result.resize(pose_key_points.get_volume());
-    for (int i = 0; i < pose_key_points.get_volume(); ++i) {
+    result.resize(openposert.get_pose_keypoints_size());
+    for (int i = 0; i < result.size(); ++i) {
       if ((i + 1) % 3 == 0) {
         result[i] = pose_key_points[i];
       } else {

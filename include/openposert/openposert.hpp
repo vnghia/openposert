@@ -27,7 +27,13 @@ class OpenPoseRT {
 
   void forward();
 
-  const auto& get_pose_keypoints() { return pose_keypoints_; }
+  const auto get_pose_keypoints() {
+    return static_cast<float*>(pose_keypoints_data_.get());
+  }
+
+  const auto get_pose_keypoints_size() {
+    return number_people_ * get_pose_number_body_parts(pose_model_) * peak_dim_;
+  }
 
  private:
   void malloc_memory();
@@ -80,8 +86,10 @@ class OpenPoseRT {
 
   std::shared_ptr<void> pair_scores_data_;
 
-  Array<float> pose_keypoints_;
-  Array<float> pose_scores_;
+  int number_people_;
+
+  std::shared_ptr<void> pose_keypoints_data_;
+  std::shared_ptr<void> pose_scores_data_;
 };
 
 }  // namespace openposert

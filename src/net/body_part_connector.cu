@@ -185,8 +185,43 @@ std::vector<std::tuple<T, T, int, int, int>> paf_ptr_into_vector_gpu(
 }
 
 template <typename T>
+void people_vector_to_people_array_gpu(
+    T* pose_keypoints, T* pose_scores, const T scale_factor,
+    const std::vector<std::pair<std::vector<int>, T>>& people_vector,
+    const std::vector<int>& valid_subset_indexes, const T* const peaks_ptr,
+    const int number_people, const unsigned int number_body_parts,
+    const unsigned int number_body_part_pairs) {
+  try {
+    // fill people keypoints
+    const auto one_over_number_body_parts_and_pa_fs =
+        1 / T(number_body_parts + number_body_part_pairs);
+    // for each person
+    for (auto person = 0u; person < valid_subset_indexes.size(); person++) {
+      const auto& person_pair = people_vector[valid_subset_indexes[person]];
+      const auto& person_vector = person_pair.first;
+      // for each body part
+      for (auto body_part = 0u; body_part < number_body_parts; body_part++) {
+        const auto base_offset = (person * number_body_parts + body_part) * 3;
+        const auto body_part_index = person_vector[body_part];
+        if (body_part_index > 0) {
+          pose_keypoints[base_offset] =
+              peaks_ptr[body_part_index - 2] * scale_factor;
+          pose_keypoints[base_offset + 1] =
+              peaks_ptr[body_part_index - 1] * scale_factor;
+          pose_keypoints[base_offset + 2] = peaks_ptr[body_part_index];
+        }
+      }
+      pose_scores[person] =
+          person_pair.second * one_over_number_body_parts_and_pa_fs;
+    }
+  } catch (const std::exception& e) {
+    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+  }
+}
+
+template <typename T>
 void connect_body_parts_gpu(
-    Array<T>& pose_keypoints, Array<T>& pose_scores,
+    T* pose_keypoints, T* pose_scores, int& number_people,
     const T* const heat_map_gpu_ptr, const T* const peaks_ptr,
     const PoseModel pose_model, const Point<int>& heat_map_size,
     const int max_peaks, const T inter_min_above_threshold,
@@ -245,7 +280,6 @@ void connect_body_parts_gpu(
     // b) min_subset_score: removed if global score smaller than this
     // c) max_peaks (POSE_MAX_PEOPLE): keep first max_peaks people above
     // thresholds
-    int number_people;
     std::vector<int> valid_subset_indexes;
     // valid_subset_indexes.reserve(fast_min((size_t)max_peaks,
     // people_vector.size()));
@@ -254,10 +288,10 @@ void connect_body_parts_gpu(
         valid_subset_indexes, number_people, people_vector, number_body_parts,
         min_subset_cnt, min_subset_score, maximize_positives, peaks_ptr);
     // fill and return pose_keypoints
-    people_vector_to_people_array(pose_keypoints, pose_scores, scale_factor,
-                                  people_vector, valid_subset_indexes,
-                                  peaks_ptr, number_people, number_body_parts,
-                                  number_body_part_pairs);
+    people_vector_to_people_array_gpu(
+        pose_keypoints, pose_scores, scale_factor, people_vector,
+        valid_subset_indexes, peaks_ptr, number_people, number_body_parts,
+        number_body_part_pairs);
 
     // sanity check
     cuda_check(__LINE__, __FUNCTION__, __FILE__);
@@ -267,7 +301,7 @@ void connect_body_parts_gpu(
 }
 
 template void connect_body_parts_gpu(
-    Array<float>& pose_keypoints, Array<float>& pose_scores,
+    float* pose_keypoints, float* pose_scores, int& number_people,
     const float* const heat_map_gpu_ptr, const float* const peaks_ptr,
     const PoseModel pose_model, const Point<int>& heat_map_size,
     const int max_peaks, const float inter_min_above_threshold,
@@ -280,7 +314,7 @@ template void connect_body_parts_gpu(
     const float* const peaks_gpu_ptr);
 
 template void connect_body_parts_gpu(
-    Array<double>& pose_keypoints, Array<double>& pose_scores,
+    double* pose_keypoints, double* pose_scores, int& number_people,
     const double* const heat_map_gpu_ptr, const double* const peaks_ptr,
     const PoseModel pose_model, const Point<int>& heat_map_size,
     const int max_peaks, const double inter_min_above_threshold,
