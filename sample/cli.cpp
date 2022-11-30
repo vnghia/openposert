@@ -36,12 +36,24 @@ int main(int argc, char* argv[]) {
   cv::Mat frame(input_height, input_width, CV_8UC3,
                 openposert.get_input_data());
 
+  std::vector<float> result;
   while (cap.read(frame)) {
-    cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
     openposert.forward();
+    const auto& pose_key_points = openposert.get_pose_keypoints();
+    result.resize(pose_key_points.get_volume());
+    for (int i = 0; i < pose_key_points.get_volume(); ++i) {
+      if ((i + 1) % 3 == 0) {
+        result[i] = pose_key_points[i];
+      } else {
+        result[i] = pose_key_points[i] * 24;
+      }
+    }
+    for (size_t i = 0; i < result.size() / 3; i++) {
+      cv::circle(frame, cv::Point(result[i * 3], result[i * 3 + 1]), 5,
+                 cv::Scalar(255, 0, 0), -1);
+    }
     cv::imshow("OpenPoseRT", frame);
     if (cv::waitKey(5) >= 0) break;
-    spdlog::info("result ndim: {}", openposert.get_pose_keypoints().get_size());
   }
 
   return 0;

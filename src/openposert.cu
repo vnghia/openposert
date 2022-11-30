@@ -100,21 +100,19 @@ void OpenPoseRT::malloc_memory() {
       static_cast<int>(output_dims.d[0]), static_cast<int>(output_dims.d[1]),
       static_cast<int>(output_dims.d[2]), static_cast<int>(output_dims.d[3])};
   nms_target_size_ = {1, max_joints_, max_person_, peak_dim_};
-  spdlog::info("target size {} {} {} {}", 1, max_joints_, max_person_,
-               peak_dim_);
 
   auto peaks_size = max_joints_ * max_person_ * peak_dim_ * sizeof(float);
   peaks_data_ = cuda_malloc_managed(peaks_size);
   spdlog::info("allocated {} byte for peaks data", peaks_size);
 
   auto number_body_part_pairs = static_cast<int>(body_part_pair_.size() / 2);
-  auto peaks_score_size =
-      number_body_part_pairs * max_person_ * max_person_ * sizeof(float);
+  auto peaks_score_size = number_body_part_pairs * (max_person_ - 1) *
+                          (max_person_ - 1) * sizeof(float);
   pair_scores_data_ = cuda_malloc_managed(peaks_score_size);
   spdlog::info("allocated {} byte for peaks score data", peaks_score_size);
-  pair_scores_cpu_.reset(
-      std::vector<int>{number_body_part_pairs, max_person_, max_person_},
-      static_cast<float *>(pair_scores_data_.get()));
+  pair_scores_cpu_.reset(std::vector<int>{number_body_part_pairs,
+                                          (max_person_ - 1), (max_person_ - 1)},
+                         static_cast<float *>(pair_scores_data_.get()));
 }
 
 void OpenPoseRT::forward() {
@@ -131,13 +129,16 @@ void OpenPoseRT::forward() {
   Point<int> net_output_size = {engine_.get_output_dim(0).d[3],
                                 engine_.get_output_dim(0).d[2]};
 
-  connect_body_parts_cpu(pose_keypoints_, pose_scores_,
-                         static_cast<float *>(net_output_data_.get()),
-                         static_cast<float *>(peaks_data_.get()),
-                         PoseModel::BODY_25, net_output_size, max_person_,
-                         inter_min_above_threshold_, inter_threshold_,
-                         min_subset_cnt_, min_subset_score_, nms_threshold_,
-                         1.f, false);
+  connect_body_parts_gpu(
+      pose_keypoints_, pose_scores_,
+      static_cast<float *>(net_output_data_.get()),
+      static_cast<float *>(peaks_data_.get()), PoseModel::BODY_25,
+      net_output_size, max_person_ - 1, inter_min_above_threshold_,
+      inter_threshold_, min_subset_cnt_, min_subset_score_, nms_threshold_, 1.f,
+      false, pair_scores_cpu_, static_cast<float *>(pair_scores_data_.get()),
+      static_cast<unsigned int *>(body_part_pair_gpu_.get()),
+      static_cast<unsigned int *>(pose_map_idx_gpu_.get()),
+      static_cast<float *>(peaks_data_.get()));
 }
 
 }  // namespace openposert
