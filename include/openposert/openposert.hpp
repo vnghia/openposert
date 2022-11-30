@@ -19,7 +19,7 @@ class OpenPoseRT {
   OpenPoseRT(const fs::path& engine_path, std::size_t input_width,
              std::size_t input_height, std::size_t input_channels,
              std::size_t net_input_width = 0, std::size_t net_input_height = 0,
-             std::size_t max_joints = 25, std::size_t max_person = 128);
+             std::size_t max_joints = 25, std::size_t max_person = 127);
 
   Engine& engine() { return engine_; }
 
