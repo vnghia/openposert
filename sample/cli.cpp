@@ -31,9 +31,9 @@ int main(int argc, char* argv[]) {
   auto input_channels = static_cast<std::size_t>(cap.get(cv::CAP_PROP_CHANNEL));
   input_channels = (input_channels > 0) ? input_channels : 3;
 
-  auto openposert = OpenPoseRT(args["engine"].as<fs::path>(), input_width,
-                               input_height, input_channels, PoseModel::BODY_25,
-                               false, 0, 25, 5, 0, 0, 0, 8, 0);
+  auto openposert = OpenPoseRT(
+      args["engine"].as<fs::path>(), input_width, input_height, input_channels,
+      PoseModel::BODY_25B, false, 0, 25, 5, 0, 0, 0, 8, 0);
 
   cv::Mat frame(input_height, input_width, CV_8UC3,
                 openposert.get_input_data());
