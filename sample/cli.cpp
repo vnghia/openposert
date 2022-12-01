@@ -4,6 +4,7 @@
 #include "cxxopts.hpp"
 #include "opencv2/opencv.hpp"
 #include "openposert/openposert.hpp"
+#include "openposert/pose/enum.hpp"
 #include "spdlog/spdlog.h"
 
 using namespace openposert;
@@ -31,7 +32,8 @@ int main(int argc, char* argv[]) {
   input_channels = (input_channels > 0) ? input_channels : 3;
 
   auto openposert = OpenPoseRT(args["engine"].as<fs::path>(), input_width,
-                               input_height, input_channels);
+                               input_height, input_channels, PoseModel::BODY_25,
+                               false, 0, 25, 5, 0, 0, 0, 8, 0);
 
   cv::Mat frame(input_height, input_width, CV_8UC3,
                 openposert.get_input_data());
