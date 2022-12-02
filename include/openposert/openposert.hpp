@@ -7,6 +7,7 @@
 #include "openposert/core/array.hpp"
 #include "openposert/core/point.hpp"
 #include "openposert/net/input_preprocessing.hpp"
+#include "openposert/net/output_postprocessing.hpp"
 #include "openposert/pose/enum.hpp"
 #include "openposert/pose/pose_parameters.hpp"
 
@@ -106,6 +107,8 @@ class OpenPoseRT {
 
   std::shared_ptr<void> pose_keypoints_data_;
   std::shared_ptr<void> pose_scores_data_;
+
+  OutputPostprocessing output_postprocessing_;
 };
 
 }  // namespace openposert

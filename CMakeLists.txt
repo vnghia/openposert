@@ -72,6 +72,7 @@ add_library(${PROJECT_NAME}
   src/net/input_preprocessing.cpp
   src/net/input_preprocessing.cu
   src/net/nms.cu
+  src/net/output_postprocessing.cu
   src/net/reoder_and_normalize.cu
   src/net/resize_and_merge.cu
 
