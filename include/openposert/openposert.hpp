@@ -39,7 +39,7 @@ class OpenPoseRT {
   }
 
   const auto get_pose_keypoints_size() {
-    return number_people_ * get_pose_number_body_parts(pose_model) * peak_dim;
+    return number_people_ * number_body_parts * peak_dim;
   }
 
   const int input_width;
@@ -80,6 +80,9 @@ class OpenPoseRT {
 
   const std::vector<unsigned int> body_part_pair;
   const std::vector<unsigned int> pose_map_idx;
+
+  int number_body_parts;
+  int number_body_part_pairs;
 
  private:
   void malloc_memory();

@@ -12,6 +12,8 @@
 #include "openposert/pose/pose_parameters.hpp"
 #include "spdlog/fmt/bundled/format.h"
 #include "spdlog/spdlog.h"
+#include "thrust/execution_policy.h"
+#include "thrust/fill.h"
 
 namespace openposert {
 
@@ -70,7 +72,9 @@ OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
         const auto offset = (add_bkg_channel(pose_model) ? 1 : 0);
         for (auto &i : pose_map_idx) i += (number_body_part + offset);
         return pose_map_idx;
-      })()) {
+      })()),
+      number_body_parts(get_pose_number_body_parts(pose_model)),
+      number_body_part_pairs(static_cast<int>(body_part_pair.size() / 2)) {
   spdlog::info("OpenPoseRT image input width = {}, height = {}, channel = {}",
                input_width, input_height, input_channels);
   spdlog::info("OpenPoseRT net input width = {}, height = {}", net_input_width,
@@ -144,33 +148,36 @@ void OpenPoseRT::malloc_memory() {
   peaks_data_ = cuda_malloc_managed(peaks_size);
   spdlog::info("allocated {} byte for peaks data", peaks_size);
 
-  auto number_body_parts = static_cast<int>(body_part_pair.size());
-  auto number_body_part_pairs = static_cast<int>(number_body_parts / 2);
   auto peaks_score_size =
       number_body_part_pairs * max_person * max_person * sizeof(float);
   pair_scores_data_ = cuda_malloc_managed(peaks_score_size);
   spdlog::info("allocated {} byte for peaks score data", peaks_score_size);
 
-  auto pose_keypoints_size = max_person *
-                             get_pose_number_body_parts(pose_model) * peak_dim *
-                             sizeof(float);
+  auto pose_keypoints_size =
+      max_person * number_body_parts * peak_dim * sizeof(float);
   pose_keypoints_data_ = cuda_malloc_managed(pose_keypoints_size);
   spdlog::info("allocated {} byte for pose keypoints data",
                pose_keypoints_size);
 
+  thrust::fill_n(thrust::host, static_cast<float *>(pose_keypoints_data_.get()),
+                 max_person * number_body_parts * peak_dim, 0);
+
   auto pose_scores_size = max_person * sizeof(float);
   pose_scores_data_ = cuda_malloc_managed(pose_scores_size);
   spdlog::info("allocated {} byte for pose scores data", pose_scores_size);
+
+  thrust::fill_n(thrust::host, static_cast<float *>(pose_scores_data_.get()),
+                 max_person, 0);
 
   output_postprocessing_ = OutputPostprocessing(
       static_cast<float *>(pose_keypoints_data_.get()),
       static_cast<float *>(pose_scores_data_.get()),
       static_cast<float *>(net_output_data_.get()),
       static_cast<int>(net_output_dim.d[3]),
-      static_cast<int>(net_output_dim.d[2]), 1.f, number_body_parts, max_person,
-      min_subset_cnt, min_subset_score, maximize_positive, inter_threshold,
-      inter_min_above_threshold, nms_threshold,
-      static_cast<float *>(peaks_data_.get()),
+      static_cast<int>(net_output_dim.d[2]), peak_dim, 1.f, number_body_parts,
+      number_body_part_pairs, max_person, min_subset_cnt, min_subset_score,
+      maximize_positive, inter_threshold, inter_min_above_threshold,
+      nms_threshold, static_cast<float *>(peaks_data_.get()),
       static_cast<float *>(pair_scores_data_.get()),
       static_cast<unsigned int *>(body_part_pair_gpu_.get()),
       static_cast<unsigned int *>(pose_map_idx_gpu_.get()));

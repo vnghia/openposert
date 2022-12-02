@@ -124,18 +124,20 @@ __global__ void paf_score_kernel(
 
 OutputPostprocessing::OutputPostprocessing(
     float* pose_keypoints, float* pose_scores, float* net_output_ptr,
-    int net_output_width, int net_output_height, float scale_factor,
-    int number_body_parts, int max_peaks, int min_subset_cnt,
-    float min_subset_score, bool maximize_positives, float inter_threshold,
+    int net_output_width, int net_output_height, int peak_dim,
+    float scale_factor, int number_body_parts, int number_body_part_pairs,
+    int max_peaks, int min_subset_cnt, float min_subset_score,
+    bool maximize_positives, float inter_threshold,
     float inter_min_above_threshold, float default_nms_threshold,
     float* peaks_ptr, float* pair_scores_ptr, unsigned int* body_part_pairs_ptr,
     unsigned int* pose_map_idx_ptr)
     : net_output_ptr(net_output_ptr),
       net_output_width(net_output_width),
       net_output_height(net_output_height),
+      peak_dim(peak_dim),
       scale_factor(scale_factor),
       number_body_parts(number_body_parts),
-      number_body_part_pairs(number_body_parts / 2),
+      number_body_part_pairs(number_body_part_pairs),
       max_peaks(max_peaks),
       min_subset_cnt(min_subset_cnt),
       min_subset_score(min_subset_score),
@@ -225,6 +227,10 @@ int OutputPostprocessing::postprocessing_gpu() {
       static_cast<int*>(person_removed_data_.get()), people_vector_count_,
       number_body_parts, min_subset_cnt, min_subset_score, maximize_positives,
       peaks_ptr);
+
+  thrust::fill_n(thrust::host, pose_keypoints_,
+                 number_people_ * number_body_parts * peak_dim, 0);
+  thrust::fill_n(thrust::host, pose_scores_, number_people_, 0);
 
   people_vector_to_people_array_gpu(
       pose_keypoints_, pose_scores_, scale_factor,

@@ -8,23 +8,13 @@ namespace openposert {
 
 class OutputPostprocessing {
  public:
-  OutputPostprocessing()
-      : scale_factor(0),
-        number_body_parts(0),
-        number_body_part_pairs(0),
-        max_peaks(0),
-        min_subset_cnt(0),
-        min_subset_score(0),
-        maximize_positives(false),
-        peaks_ptr(nullptr),
-        pair_scores_ptr(nullptr),
-        body_part_pairs_ptr(nullptr),
-        paf_total_size(0) {}
+  OutputPostprocessing() {}
 
   OutputPostprocessing(float* pose_keypoints, float* pose_scores,
                        float* net_output_ptr, int net_output_width,
-                       int net_output_height, float scale_factor,
-                       int number_body_parts, int max_peaks, int min_subset_cnt,
+                       int net_output_height, int peak_dim, float scale_factor,
+                       int number_body_parts, int number_body_part_pairs,
+                       int max_peaks, int min_subset_cnt,
                        float min_subset_score, bool maximize_positives,
                        float inter_threshold, float inter_min_above_threshold,
                        float default_nms_threshold, float* peaks_ptr,
@@ -37,6 +27,8 @@ class OutputPostprocessing {
   float* net_output_ptr;
   int net_output_height;
   int net_output_width;
+
+  int peak_dim;
 
   float scale_factor;
 
