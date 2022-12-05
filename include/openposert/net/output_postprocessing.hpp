@@ -51,15 +51,16 @@ class OutputPostprocessing {
   int paf_total_size;
 
  private:
-  void paf_ptr_into_vector_gpu(
-      int* sorted_ptr, float* total_score_ptr, float* paf_score_ptr,
-      int* pair_index_ptr, int* index_a_ptr, int* index_b_ptr,
-      const int total_size, const float* const pair_scores,
-      const float* const peaks_ptr, const int max_peaks,
-      const unsigned int* body_part_pairs,
-      const unsigned int number_body_part_pairs, int& pair_connections_count);
+  void paf_ptr_into_vector(int* sorted_ptr, float* total_score_ptr,
+                           float* paf_score_ptr, int* pair_index_ptr,
+                           int* index_a_ptr, int* index_b_ptr,
+                           const int total_size, const float* const pair_scores,
+                           const float* const peaks_ptr, const int max_peaks,
+                           const unsigned int* body_part_pairs,
+                           const unsigned int number_body_part_pairs,
+                           int& pair_connections_count);
 
-  void paf_vector_into_people_vector_gpu(
+  void paf_vector_into_people_vector(
       int* people_vector_body_ptr, float* people_vector_score_ptr,
       int* person_assigned_ptr, int* person_removed_ptr,
       const int* const paf_sorted_ptr, const float* const paf_score_ptr,
@@ -69,7 +70,7 @@ class OutputPostprocessing {
       const unsigned int* body_part_pairs, const unsigned int number_body_parts,
       int& people_vector_count);
 
-  void remove_people_below_thresholds_and_fill_faces_gpu(
+  void remove_people_below_thresholds_and_fill_faces(
       int* valid_subset_indexes_ptr, int& number_people,
       int* people_vector_body_ptr, float* people_vector_score_ptr,
       int* person_removed_ptr, const int people_vector_count,
@@ -77,14 +78,16 @@ class OutputPostprocessing {
       const float min_subset_score, const bool maximize_positives,
       const float* const peaks_ptr);
 
-  void people_vector_to_people_array_gpu(
-      float* pose_keypoints, float* pose_scores, const float scale_factor,
-      const int* const people_vector_body_ptr,
-      const float* const people_vector_score_ptr,
-      const int* const valid_subset_indexes_ptr, const int people_vector_count,
-      const float* const peaks_ptr, const int number_people,
-      const unsigned int number_body_parts,
-      const unsigned int number_body_part_pairs);
+  void people_vector_to_people_array(float* pose_keypoints, float* pose_scores,
+                                     const float scale_factor,
+                                     const int* const people_vector_body_ptr,
+                                     const float* const people_vector_score_ptr,
+                                     const int* const valid_subset_indexes_ptr,
+                                     const int people_vector_count,
+                                     const float* const peaks_ptr,
+                                     const int number_people,
+                                     const unsigned int number_body_parts,
+                                     const unsigned int number_body_part_pairs);
 
   PoseModel pose_model;
 

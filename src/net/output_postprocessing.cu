@@ -190,15 +190,15 @@ int OutputPostprocessing::postprocessing_gpu() {
   thrust::sequence(thrust::host, static_cast<int*>(paf_sorted_index_.get()),
                    static_cast<int*>(paf_sorted_index_.get()) + paf_total_size,
                    0);
-  paf_ptr_into_vector_gpu(static_cast<int*>(paf_sorted_index_.get()),
-                          static_cast<float*>(paf_total_score_data_.get()),
-                          static_cast<float*>(paf_score_data_.get()),
-                          static_cast<int*>(paf_pair_index_data_.get()),
-                          static_cast<int*>(paf_index_a_data_.get()),
-                          static_cast<int*>(paf_index_b_data_.get()),
-                          paf_total_size, pair_scores_ptr, peaks_ptr, max_peaks,
-                          body_part_pairs_ptr, number_body_part_pairs,
-                          pair_connections_count_);
+  paf_ptr_into_vector(static_cast<int*>(paf_sorted_index_.get()),
+                      static_cast<float*>(paf_total_score_data_.get()),
+                      static_cast<float*>(paf_score_data_.get()),
+                      static_cast<int*>(paf_pair_index_data_.get()),
+                      static_cast<int*>(paf_index_a_data_.get()),
+                      static_cast<int*>(paf_index_b_data_.get()),
+                      paf_total_size, pair_scores_ptr, peaks_ptr, max_peaks,
+                      body_part_pairs_ptr, number_body_part_pairs,
+                      pair_connections_count_);
 
   people_vector_count_ = 0;
   thrust::fill_n(thrust::host, static_cast<int*>(person_assigned_data_.get()),
@@ -206,7 +206,7 @@ int OutputPostprocessing::postprocessing_gpu() {
   thrust::fill_n(thrust::host,
                  static_cast<int*>(people_vector_body_data_.get()),
                  paf_total_size * (number_body_parts + 1), 0);
-  paf_vector_into_people_vector_gpu(
+  paf_vector_into_people_vector(
       static_cast<int*>(people_vector_body_data_.get()),
       static_cast<float*>(people_vector_score_data_.get()),
       static_cast<int*>(person_assigned_data_.get()),
@@ -220,7 +220,7 @@ int OutputPostprocessing::postprocessing_gpu() {
       people_vector_count_);
 
   number_people_ = 0;
-  remove_people_below_thresholds_and_fill_faces_gpu(
+  remove_people_below_thresholds_and_fill_faces(
       static_cast<int*>(valid_subset_indexes_data_.get()), number_people_,
       static_cast<int*>(people_vector_body_data_.get()),
       static_cast<float*>(people_vector_score_data_.get()),
@@ -232,7 +232,7 @@ int OutputPostprocessing::postprocessing_gpu() {
                  number_people_ * number_body_parts * peak_dim, 0);
   thrust::fill_n(thrust::host, pose_scores_, number_people_, 0);
 
-  people_vector_to_people_array_gpu(
+  people_vector_to_people_array(
       pose_keypoints_, pose_scores_, scale_factor,
       static_cast<int*>(people_vector_body_data_.get()),
       static_cast<float*>(people_vector_score_data_.get()),
@@ -242,7 +242,7 @@ int OutputPostprocessing::postprocessing_gpu() {
   return number_people_;
 }
 
-void OutputPostprocessing::paf_ptr_into_vector_gpu(
+void OutputPostprocessing::paf_ptr_into_vector(
     int* sorted_ptr, float* total_score_ptr, float* paf_score_ptr,
     int* pair_index_ptr, int* index_a_ptr, int* index_b_ptr,
     const int total_size, const float* const pair_scores,
@@ -313,7 +313,7 @@ void OutputPostprocessing::paf_ptr_into_vector_gpu(
   }
 }
 
-void OutputPostprocessing::paf_vector_into_people_vector_gpu(
+void OutputPostprocessing::paf_vector_into_people_vector(
     int* people_vector_body_ptr, float* people_vector_score_ptr,
     int* person_assigned_ptr, int* person_removed_ptr,
     const int* const paf_sorted_ptr, const float* const paf_score_ptr,
@@ -472,7 +472,7 @@ void OutputPostprocessing::paf_vector_into_people_vector_gpu(
   }
 }
 
-void OutputPostprocessing::remove_people_below_thresholds_and_fill_faces_gpu(
+void OutputPostprocessing::remove_people_below_thresholds_and_fill_faces(
     int* valid_subset_indexes_ptr, int& number_people,
     int* people_vector_body_ptr, float* people_vector_score_ptr,
     int* person_removed_ptr, const int people_vector_count,
@@ -537,7 +537,7 @@ void OutputPostprocessing::remove_people_below_thresholds_and_fill_faces_gpu(
   }
 }
 
-void OutputPostprocessing::people_vector_to_people_array_gpu(
+void OutputPostprocessing::people_vector_to_people_array(
     float* pose_keypoints, float* pose_scores, const float scale_factor,
     const int* const people_vector_body_ptr,
     const float* const people_vector_score_ptr,
