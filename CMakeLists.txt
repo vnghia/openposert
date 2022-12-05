@@ -63,13 +63,8 @@ include(openposert/external/minrt)
 
 # openposert
 add_library(${PROJECT_NAME}
-  src/core/array.cpp
   src/core/point.cpp
-  src/core/rectangle.cpp
 
-  src/net/body_part_connector.cpp
-  src/net/body_part_connector.cu
-  src/net/input_preprocessing.cpp
   src/net/input_preprocessing.cu
   src/net/nms.cu
   src/net/output_postprocessing.cu
@@ -77,9 +72,6 @@ add_library(${PROJECT_NAME}
   src/net/resize_and_merge.cu
 
   src/pose/pose_parameters.cpp
-
-  src/utilities/keypoint.cpp
-  src/utilities/opencv.cpp
 
   src/openposert.cu
 )

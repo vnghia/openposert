@@ -1,8 +1,6 @@
 #include "minrt/utils.hpp"
-#include "openposert/core/array.hpp"
 #include "openposert/core/point.hpp"
 #include "openposert/gpu/cuda.hpp"
-#include "openposert/net/body_part_connector.hpp"
 #include "openposert/net/input_preprocessing.hpp"
 #include "openposert/net/nms.hpp"
 #include "openposert/net/output_postprocessing.hpp"

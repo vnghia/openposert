@@ -4,7 +4,6 @@
 #include <memory>
 
 #include "minrt/minrt.hpp"
-#include "openposert/core/array.hpp"
 #include "openposert/core/point.hpp"
 #include "openposert/net/input_preprocessing.hpp"
 #include "openposert/net/output_postprocessing.hpp"
