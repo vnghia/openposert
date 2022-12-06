@@ -110,12 +110,6 @@ void OpenPoseRT::malloc_memory() {
   input_data_ = cuda_malloc_managed(input_size);
   spdlog::info("allocated {} byte for input data with dim", input_size);
 
-  auto normalized_input_size =
-      input_width * input_height * input_channels * sizeof(float);
-  normalized_data_ = cuda_malloc_managed(normalized_input_size);
-  spdlog::info("allocated {} byte for normalized input data",
-               normalized_input_size);
-
   net_input_data_ = engine_.get_input_device_owned_ptr(0);
   spdlog::info("use engine input buffer at {} for net input data",
                net_input_data_.get());
@@ -125,9 +119,8 @@ void OpenPoseRT::malloc_memory() {
                net_output_data_.get());
 
   input_preprocessing_ = InputPreprocessing(
-      static_cast<unsigned char *>(input_data_.get()),
-      static_cast<float *>(normalized_data_.get()), input_width, input_height,
-      input_channels, static_cast<float *>(net_input_data_.get()),
+      static_cast<unsigned char *>(input_data_.get()), input_width,
+      input_height, input_channels, static_cast<float *>(net_input_data_.get()),
       net_input_width, net_input_height);
 
   auto resize_net_output_size =

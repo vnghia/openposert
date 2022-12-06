@@ -88,7 +88,6 @@ class OpenPoseRT {
   std::shared_ptr<void> pose_map_idx_gpu_;
 
   std::shared_ptr<void> input_data_;
-  std::shared_ptr<void> normalized_data_;
   std::shared_ptr<void> net_input_data_;
 
   InputPreprocessing input_preprocessing_;
