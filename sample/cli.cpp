@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 
@@ -9,6 +10,7 @@
 #include "spdlog/spdlog.h"
 
 using namespace openposert;
+using std::size_t;
 
 int main(int argc, char* argv[]) {
   cxxopts::Options options("openposert", "Openpose TensorRT Engine");
@@ -25,11 +27,9 @@ int main(int argc, char* argv[]) {
 
   cv::VideoCapture cap(args["input"].as<fs::path>());
 
-  auto input_width =
-      static_cast<std::size_t>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-  auto input_height =
-      static_cast<std::size_t>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-  auto input_channels = static_cast<std::size_t>(cap.get(cv::CAP_PROP_CHANNEL));
+  auto input_width = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+  auto input_height = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+  auto input_channels = static_cast<size_t>(cap.get(cv::CAP_PROP_CHANNEL));
   input_channels = (input_channels > 0) ? input_channels : 3;
 
   auto openposert = OpenPoseRT(

@@ -9,10 +9,12 @@ namespace openposert {
 
 using namespace minrt;
 
-InputPreprocessing::InputPreprocessing(
-    unsigned char* input_data, std::size_t input_width,
-    std::size_t input_height, std::size_t input_channels, float* net_input_data,
-    std::size_t net_input_width, std::size_t net_input_height)
+InputPreprocessing::InputPreprocessing(unsigned char* input_data,
+                                       size_t input_width, size_t input_height,
+                                       size_t input_channels,
+                                       float* net_input_data,
+                                       size_t net_input_width,
+                                       size_t net_input_height)
     : input_data_(input_data),
       input_width_(input_width),
       input_height_(input_height),
