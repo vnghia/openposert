@@ -20,7 +20,7 @@ class InputPreprocessing {
 
  private:
   unsigned char* input_data_;
-  std::shared_ptr<void> normalized_data_;
+  std::shared_ptr<float> normalized_data_;
 
   size_t input_width_;
   size_t input_height_;

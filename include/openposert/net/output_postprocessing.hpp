@@ -91,23 +91,23 @@ class OutputPostprocessing {
 
   PoseModel pose_model;
 
-  std::shared_ptr<void> paf_sorted_index_;
-  std::shared_ptr<void> paf_total_score_data_;
-  std::shared_ptr<void> paf_score_data_;
-  std::shared_ptr<void> paf_pair_index_data_;
-  std::shared_ptr<void> paf_index_a_data_;
-  std::shared_ptr<void> paf_index_b_data_;
+  std::shared_ptr<int> paf_sorted_index_;
+  std::shared_ptr<float> paf_total_score_data_;
+  std::shared_ptr<float> paf_score_data_;
+  std::shared_ptr<int> paf_pair_index_data_;
+  std::shared_ptr<int> paf_index_a_data_;
+  std::shared_ptr<int> paf_index_b_data_;
 
   int pair_connections_count_;
 
-  std::shared_ptr<void> people_vector_body_data_;
-  std::shared_ptr<void> people_vector_score_data_;
-  std::shared_ptr<void> person_assigned_data_;
-  std::shared_ptr<void> person_removed_data_;
+  std::shared_ptr<int> people_vector_body_data_;
+  std::shared_ptr<float> people_vector_score_data_;
+  std::shared_ptr<int> person_assigned_data_;
+  std::shared_ptr<int> person_removed_data_;
 
   int people_vector_count_;
 
-  std::shared_ptr<void> valid_subset_indexes_data_;
+  std::shared_ptr<int> valid_subset_indexes_data_;
 
   float* pose_keypoints_;
   float* pose_scores_;

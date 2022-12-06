@@ -84,15 +84,13 @@ OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
       inter_min_above_threshold, inter_threshold, min_subset_cnt,
       min_subset_score);
 
-  auto body_part_pair_size =
-      body_part_pair.size() * sizeof(decltype(body_part_pair)::value_type);
-  body_part_pair_gpu_ = cuda_malloc_managed(body_part_pair_size);
+  auto body_part_pair_size = body_part_pair.size() * sizeof(unsigned int);
+  body_part_pair_gpu_ = cuda_malloc_managed<unsigned int>(body_part_pair_size);
   cuda_upload(body_part_pair_gpu_.get(), body_part_pair.data(),
               body_part_pair_size);
 
-  auto pose_map_idx_size =
-      pose_map_idx.size() * sizeof(decltype(pose_map_idx)::value_type);
-  pose_map_idx_gpu_ = cuda_malloc_managed(pose_map_idx_size);
+  auto pose_map_idx_size = pose_map_idx.size() * sizeof(unsigned int);
+  pose_map_idx_gpu_ = cuda_malloc_managed<unsigned int>(pose_map_idx_size);
   cuda_upload(pose_map_idx_gpu_.get(), pose_map_idx.data(), pose_map_idx_size);
 
   malloc_memory();
@@ -107,21 +105,22 @@ void OpenPoseRT::malloc_memory() {
 
   auto input_size =
       input_width * input_height * input_channels * sizeof(unsigned char);
-  input_data_ = cuda_malloc_managed(input_size);
+  input_data_ = cuda_malloc_managed<unsigned char>(input_size);
   spdlog::info("allocated {} byte for input data with dim", input_size);
 
-  net_input_data_ = engine_.get_input_device_owned_ptr(0);
+  net_input_data_ =
+      std::static_pointer_cast<float>(engine_.get_input_device_owned_ptr(0));
   spdlog::info("use engine input buffer at {} for net input data",
-               net_input_data_.get());
+               fmt::ptr(net_input_data_.get()));
 
-  net_output_data_ = engine_.get_output_device_owned_ptr(0);
+  net_output_data_ =
+      std::static_pointer_cast<float>(engine_.get_output_device_owned_ptr(0));
   spdlog::info("use engine output buffer at {} for net output data",
-               net_output_data_.get());
+               fmt::ptr(net_output_data_.get()));
 
   input_preprocessing_ = InputPreprocessing(
-      static_cast<unsigned char *>(input_data_.get()), input_width,
-      input_height, input_channels, static_cast<float *>(net_input_data_.get()),
-      net_input_width, net_input_height);
+      input_data_.get(), input_width, input_height, input_channels,
+      net_input_data_.get(), net_input_width, net_input_height);
 
   auto resize_net_output_size =
       engine_.get_output_size(0) * resize_factor * resize_factor;
@@ -130,21 +129,21 @@ void OpenPoseRT::malloc_memory() {
                resize_net_output_size);
 
   auto kernel_size = get_total_size(net_output_dim) * sizeof(int);
-  kernel_data_ = cuda_malloc_managed(kernel_size);
+  kernel_data_ = cuda_malloc_managed<int>(kernel_size);
   spdlog::info("allocated {} byte for kernel data", kernel_size);
 
   auto peaks_size = max_joints * (max_person + 1) * peak_dim * sizeof(float);
-  peaks_data_ = cuda_malloc_managed(peaks_size);
+  peaks_data_ = cuda_malloc_managed<float>(peaks_size);
   spdlog::info("allocated {} byte for peaks data", peaks_size);
 
   auto peaks_score_size =
       number_body_part_pairs * max_person * max_person * sizeof(float);
-  pair_scores_data_ = cuda_malloc_managed(peaks_score_size);
+  pair_scores_data_ = cuda_malloc_managed<float>(peaks_score_size);
   spdlog::info("allocated {} byte for peaks score data", peaks_score_size);
 
   auto pose_keypoints_size =
       max_person * number_body_parts * peak_dim * sizeof(float);
-  pose_keypoints_data_ = cuda_malloc_managed(pose_keypoints_size);
+  pose_keypoints_data_ = cuda_malloc_managed<float>(pose_keypoints_size);
   spdlog::info("allocated {} byte for pose keypoints data",
                pose_keypoints_size);
 
@@ -152,24 +151,20 @@ void OpenPoseRT::malloc_memory() {
                  max_person * number_body_parts * peak_dim, 0);
 
   auto pose_scores_size = max_person * sizeof(float);
-  pose_scores_data_ = cuda_malloc_managed(pose_scores_size);
+  pose_scores_data_ = cuda_malloc_managed<float>(pose_scores_size);
   spdlog::info("allocated {} byte for pose scores data", pose_scores_size);
 
   thrust::fill_n(thrust::host, static_cast<float *>(pose_scores_data_.get()),
                  max_person, 0);
 
   output_postprocessing_ = OutputPostprocessing(
-      static_cast<float *>(pose_keypoints_data_.get()),
-      static_cast<float *>(pose_scores_data_.get()),
-      static_cast<float *>(net_output_data_.get()),
-      static_cast<int>(net_output_dim.d[3]),
+      pose_keypoints_data_.get(), pose_scores_data_.get(),
+      net_output_data_.get(), static_cast<int>(net_output_dim.d[3]),
       static_cast<int>(net_output_dim.d[2]), peak_dim, 1.f, number_body_parts,
       number_body_part_pairs, max_person, min_subset_cnt, min_subset_score,
       maximize_positive, inter_threshold, inter_min_above_threshold,
-      nms_threshold, static_cast<float *>(peaks_data_.get()),
-      static_cast<float *>(pair_scores_data_.get()),
-      static_cast<unsigned int *>(body_part_pair_gpu_.get()),
-      static_cast<unsigned int *>(pose_map_idx_gpu_.get()));
+      nms_threshold, peaks_data_.get(), pair_scores_data_.get(),
+      body_part_pair_gpu_.get(), pose_map_idx_gpu_.get());
 }
 
 void OpenPoseRT::forward() {
@@ -178,10 +173,9 @@ void OpenPoseRT::forward() {
   engine_.forward();
   cudaDeviceSynchronize();
 
-  nms_gpu(static_cast<float *>(peaks_data_.get()),
-          static_cast<int *>(kernel_data_.get()),
-          static_cast<float *>(net_output_data_.get()), nms_threshold,
-          nms_target_size, nms_source_size, nms_offset_x, nms_offset_y);
+  nms_gpu(peaks_data_.get(), kernel_data_.get(), net_output_data_.get(),
+          nms_threshold, nms_target_size, nms_source_size, nms_offset_x,
+          nms_offset_y);
 
   number_people_ = output_postprocessing_.postprocessing_gpu();
 }

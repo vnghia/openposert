@@ -29,17 +29,15 @@ InputPreprocessing::InputPreprocessing(unsigned char* input_data,
       input_width * input_height * input_channels * sizeof(float);
   spdlog::info("allocated {} byte for normalized input data",
                normalized_input_size);
-  normalized_data_ = cuda_malloc(normalized_input_size);
+  normalized_data_ = cuda_malloc<float>(normalized_input_size);
 }
 
 void InputPreprocessing::preprocessing_gpu() {
-  reorder_and_normalize(static_cast<float*>(normalized_data_.get()),
-                        input_data_, input_width_, input_height_,
-                        input_channels_);
-  resize_and_pad_rbg_gpu(net_input_data_,
-                         static_cast<float*>(normalized_data_.get()),
-                         input_width_, input_height_, net_input_width_,
-                         net_input_height_, scale_factor_);
+  reorder_and_normalize(normalized_data_.get(), input_data_, input_width_,
+                        input_height_, input_channels_);
+  resize_and_pad_rbg_gpu(net_input_data_, normalized_data_.get(), input_width_,
+                         input_height_, net_input_width_, net_input_height_,
+                         scale_factor_);
 }
 
 }  // namespace openposert

@@ -154,23 +154,23 @@ OutputPostprocessing::OutputPostprocessing(
   const int paf_total_size_int = paf_total_size * sizeof(int);
   const int paf_total_size_float = paf_total_size * sizeof(float);
 
-  paf_sorted_index_ = cuda_malloc_managed(paf_total_size_int);
-  paf_total_score_data_ = cuda_malloc_managed(paf_total_size_float);
-  paf_score_data_ = cuda_malloc_managed(paf_total_size_float);
-  paf_pair_index_data_ = cuda_malloc_managed(paf_total_size_int);
-  paf_index_a_data_ = cuda_malloc_managed(paf_total_size_int);
-  paf_index_b_data_ = cuda_malloc_managed(paf_total_size_int);
+  paf_sorted_index_ = cuda_malloc_managed<int>(paf_total_size_int);
+  paf_total_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
+  paf_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
+  paf_pair_index_data_ = cuda_malloc_managed<int>(paf_total_size_int);
+  paf_index_a_data_ = cuda_malloc_managed<int>(paf_total_size_int);
+  paf_index_b_data_ = cuda_malloc_managed<int>(paf_total_size_int);
 
   const int people_vector_body_size =
       paf_total_size * (number_body_parts + 1) * sizeof(float);
-  people_vector_body_data_ = cuda_malloc_managed(people_vector_body_size);
-  people_vector_score_data_ = cuda_malloc_managed(paf_total_size_float);
+  people_vector_body_data_ = cuda_malloc_managed<int>(people_vector_body_size);
+  people_vector_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
 
   const int person_assigned_size = number_body_parts * max_peaks * sizeof(int);
-  person_assigned_data_ = cuda_malloc_managed(person_assigned_size);
-  person_removed_data_ = cuda_malloc_managed(paf_total_size_int);
+  person_assigned_data_ = cuda_malloc_managed<int>(person_assigned_size);
+  person_removed_data_ = cuda_malloc_managed<int>(paf_total_size_int);
 
-  valid_subset_indexes_data_ = cuda_malloc_managed(paf_total_size_int);
+  valid_subset_indexes_data_ = cuda_malloc_managed<int>(paf_total_size_int);
 }
 
 int OutputPostprocessing::postprocessing_gpu() {
@@ -186,46 +186,34 @@ int OutputPostprocessing::postprocessing_gpu() {
       default_nms_threshold);
 
   pair_connections_count_ = 0;
-  thrust::sequence(thrust::host, static_cast<int*>(paf_sorted_index_.get()),
-                   static_cast<int*>(paf_sorted_index_.get()) + paf_total_size,
-                   0);
-  paf_ptr_into_vector(static_cast<int*>(paf_sorted_index_.get()),
-                      static_cast<float*>(paf_total_score_data_.get()),
-                      static_cast<float*>(paf_score_data_.get()),
-                      static_cast<int*>(paf_pair_index_data_.get()),
-                      static_cast<int*>(paf_index_a_data_.get()),
-                      static_cast<int*>(paf_index_b_data_.get()),
+  thrust::sequence(thrust::host, paf_sorted_index_.get(),
+                   paf_sorted_index_.get() + paf_total_size, 0);
+  paf_ptr_into_vector(paf_sorted_index_.get(), paf_total_score_data_.get(),
+                      paf_score_data_.get(), paf_pair_index_data_.get(),
+                      paf_index_a_data_.get(), paf_index_b_data_.get(),
                       paf_total_size, pair_scores_ptr, peaks_ptr, max_peaks,
                       body_part_pairs_ptr, number_body_part_pairs,
                       pair_connections_count_);
 
   people_vector_count_ = 0;
-  thrust::fill_n(thrust::host, static_cast<int*>(person_assigned_data_.get()),
+  thrust::fill_n(thrust::host, person_assigned_data_.get(),
                  number_body_parts * max_peaks, -1);
-  thrust::fill_n(thrust::host,
-                 static_cast<int*>(people_vector_body_data_.get()),
+  thrust::fill_n(thrust::host, people_vector_body_data_.get(),
                  paf_total_size * (number_body_parts + 1), 0);
   paf_vector_into_people_vector(
-      static_cast<int*>(people_vector_body_data_.get()),
-      static_cast<float*>(people_vector_score_data_.get()),
-      static_cast<int*>(person_assigned_data_.get()),
-      static_cast<int*>(person_removed_data_.get()),
-      static_cast<int*>(paf_sorted_index_.get()),
-      static_cast<float*>(paf_score_data_.get()),
-      static_cast<int*>(paf_pair_index_data_.get()),
-      static_cast<int*>(paf_index_a_data_.get()),
-      static_cast<int*>(paf_index_b_data_.get()), pair_connections_count_,
-      peaks_ptr, max_peaks, body_part_pairs_ptr, number_body_parts,
-      people_vector_count_);
+      people_vector_body_data_.get(), people_vector_score_data_.get(),
+      person_assigned_data_.get(), person_removed_data_.get(),
+      paf_sorted_index_.get(), paf_score_data_.get(),
+      paf_pair_index_data_.get(), paf_index_a_data_.get(),
+      paf_index_b_data_.get(), pair_connections_count_, peaks_ptr, max_peaks,
+      body_part_pairs_ptr, number_body_parts, people_vector_count_);
 
   number_people_ = 0;
   remove_people_below_thresholds_and_fill_faces(
-      static_cast<int*>(valid_subset_indexes_data_.get()), number_people_,
-      static_cast<int*>(people_vector_body_data_.get()),
-      static_cast<float*>(people_vector_score_data_.get()),
-      static_cast<int*>(person_removed_data_.get()), people_vector_count_,
-      number_body_parts, min_subset_cnt, min_subset_score, maximize_positives,
-      peaks_ptr);
+      valid_subset_indexes_data_.get(), number_people_,
+      people_vector_body_data_.get(), people_vector_score_data_.get(),
+      person_removed_data_.get(), people_vector_count_, number_body_parts,
+      min_subset_cnt, min_subset_score, maximize_positives, peaks_ptr);
 
   thrust::fill_n(thrust::host, pose_keypoints_,
                  number_people_ * number_body_parts * peak_dim, 0);
@@ -233,10 +221,9 @@ int OutputPostprocessing::postprocessing_gpu() {
 
   people_vector_to_people_array(
       pose_keypoints_, pose_scores_, scale_factor,
-      static_cast<int*>(people_vector_body_data_.get()),
-      static_cast<float*>(people_vector_score_data_.get()),
-      static_cast<int*>(valid_subset_indexes_data_.get()), people_vector_count_,
-      peaks_ptr, number_people_, number_body_parts, number_body_part_pairs);
+      people_vector_body_data_.get(), people_vector_score_data_.get(),
+      valid_subset_indexes_data_.get(), people_vector_count_, peaks_ptr,
+      number_people_, number_body_parts, number_body_part_pairs);
 
   return number_people_;
 }

@@ -84,28 +84,28 @@ class OpenPoseRT {
  private:
   void malloc_memory();
 
-  std::shared_ptr<void> body_part_pair_gpu_;
-  std::shared_ptr<void> pose_map_idx_gpu_;
+  std::shared_ptr<unsigned int> body_part_pair_gpu_;
+  std::shared_ptr<unsigned int> pose_map_idx_gpu_;
 
-  std::shared_ptr<void> input_data_;
-  std::shared_ptr<void> net_input_data_;
+  std::shared_ptr<unsigned char> input_data_;
+  std::shared_ptr<float> net_input_data_;
 
   InputPreprocessing input_preprocessing_;
 
-  std::shared_ptr<void> net_output_data_;
+  std::shared_ptr<float> net_output_data_;
 
   std::shared_ptr<void> resize_net_output_data_;
 
-  std::shared_ptr<void> kernel_data_;
+  std::shared_ptr<int> kernel_data_;
 
-  std::shared_ptr<void> peaks_data_;
+  std::shared_ptr<float> peaks_data_;
 
-  std::shared_ptr<void> pair_scores_data_;
+  std::shared_ptr<float> pair_scores_data_;
 
   int number_people_;
 
-  std::shared_ptr<void> pose_keypoints_data_;
-  std::shared_ptr<void> pose_scores_data_;
+  std::shared_ptr<float> pose_keypoints_data_;
+  std::shared_ptr<float> pose_scores_data_;
 
   OutputPostprocessing output_postprocessing_;
 };
