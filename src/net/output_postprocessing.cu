@@ -2,6 +2,7 @@
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/gpu/cuda_fast_math.hpp"
 #include "openposert/net/output_postprocessing.hpp"
+#include "openposert/net/resize_and_merge.hpp"
 #include "openposert/utilities/fast_math.hpp"
 #include "thrust/fill.h"
 #include "thrust/sequence.h"
@@ -123,16 +124,22 @@ __global__ void paf_score_kernel(
 
 OutputPostprocessing::OutputPostprocessing(
     float* pose_keypoints, float* pose_scores, float* net_output_ptr,
-    int net_output_width, int net_output_height, int peak_dim,
-    float scale_factor, int number_body_parts, int number_body_part_pairs,
-    int max_peaks, int min_subset_cnt, float min_subset_score,
-    bool maximize_positives, float inter_threshold,
-    float inter_min_above_threshold, float default_nms_threshold,
-    float* peaks_ptr, float* pair_scores_ptr, unsigned int* body_part_pairs_ptr,
-    unsigned int* pose_map_idx_ptr)
+    int net_output_channels, int net_output_width, int net_output_height,
+    float resize_factor, int peak_dim, float scale_factor,
+    int number_body_parts, int number_body_part_pairs, int max_peaks,
+    int min_subset_cnt, float min_subset_score, bool maximize_positives,
+    float inter_threshold, float inter_min_above_threshold,
+    float default_nms_threshold, float* peaks_ptr, float* pair_scores_ptr,
+    unsigned int* body_part_pairs_ptr, unsigned int* pose_map_idx_ptr)
     : net_output_ptr(net_output_ptr),
+      net_output_channels(net_output_channels),
       net_output_width(net_output_width),
       net_output_height(net_output_height),
+      resize_factor(resize_factor),
+      resize_net_output_height(
+          static_cast<int>(resize_factor * net_output_height)),
+      resize_net_output_width(
+          static_cast<int>(resize_factor * net_output_width)),
       peak_dim(peak_dim),
       scale_factor(scale_factor),
       number_body_parts(number_body_parts),
@@ -154,6 +161,11 @@ OutputPostprocessing::OutputPostprocessing(
   const int paf_total_size_int = paf_total_size * sizeof(int);
   const int paf_total_size_float = paf_total_size * sizeof(float);
 
+  const int resize_net_output_size = net_output_channels *
+                                     resize_net_output_height *
+                                     resize_net_output_width * sizeof(float);
+  resize_net_output_data_ = cuda_malloc_managed<float>(resize_net_output_size);
+
   paf_sorted_index_ = cuda_malloc_managed<int>(paf_total_size_int);
   paf_total_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
   paf_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
@@ -174,6 +186,17 @@ OutputPostprocessing::OutputPostprocessing(
 }
 
 int OutputPostprocessing::postprocessing_gpu() {
+  {
+    const dim3 threads_per_block{16, 16, 1};
+    const dim3 num_blocks{
+        get_number_cuda_blocks(resize_net_output_width, threads_per_block.x),
+        get_number_cuda_blocks(resize_net_output_height, threads_per_block.y),
+        get_number_cuda_blocks(net_output_channels, threads_per_block.z)};
+    resize_kernel<<<num_blocks, threads_per_block>>>(
+        resize_net_output_data_.get(), net_output_ptr, net_output_width,
+        net_output_height, resize_net_output_width, resize_net_output_height);
+  }
+
   const dim3 threads_per_block{128, 1, 1};
   const dim3 num_blocks{
       get_number_cuda_blocks(max_peaks, threads_per_block.x),

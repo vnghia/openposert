@@ -10,23 +10,27 @@ class OutputPostprocessing {
  public:
   OutputPostprocessing() {}
 
-  OutputPostprocessing(float* pose_keypoints, float* pose_scores,
-                       float* net_output_ptr, int net_output_width,
-                       int net_output_height, int peak_dim, float scale_factor,
-                       int number_body_parts, int number_body_part_pairs,
-                       int max_peaks, int min_subset_cnt,
-                       float min_subset_score, bool maximize_positives,
-                       float inter_threshold, float inter_min_above_threshold,
-                       float default_nms_threshold, float* peaks_ptr,
-                       float* pair_scores_ptr,
-                       unsigned int* body_part_pairs_ptr,
-                       unsigned int* pose_map_idx_ptr);
+  OutputPostprocessing(
+      float* pose_keypoints, float* pose_scores, float* net_output_ptr,
+      int net_output_channels, int net_output_width, int net_output_height,
+      float resize_factor, int peak_dim, float scale_factor,
+      int number_body_parts, int number_body_part_pairs, int max_peaks,
+      int min_subset_cnt, float min_subset_score, bool maximize_positives,
+      float inter_threshold, float inter_min_above_threshold,
+      float default_nms_threshold, float* peaks_ptr, float* pair_scores_ptr,
+      unsigned int* body_part_pairs_ptr, unsigned int* pose_map_idx_ptr);
 
   int postprocessing_gpu();
 
   float* net_output_ptr;
+  int net_output_channels;
   int net_output_height;
   int net_output_width;
+
+  float resize_factor;
+
+  int resize_net_output_height;
+  int resize_net_output_width;
 
   int peak_dim;
 
@@ -90,6 +94,8 @@ class OutputPostprocessing {
                                      const unsigned int number_body_part_pairs);
 
   PoseModel pose_model;
+
+  std::shared_ptr<float> resize_net_output_data_;
 
   std::shared_ptr<int> paf_sorted_index_;
   std::shared_ptr<float> paf_total_score_data_;

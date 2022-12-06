@@ -54,6 +54,8 @@ class OpenPoseRT {
   const int net_input_height;
 
   const nvinfer1::Dims net_output_dim;
+  const int net_output_width;
+  const int net_output_height;
 
   const float resize_factor;
 
@@ -93,8 +95,6 @@ class OpenPoseRT {
   InputPreprocessing input_preprocessing_;
 
   std::shared_ptr<float> net_output_data_;
-
-  std::shared_ptr<void> resize_net_output_data_;
 
   std::shared_ptr<int> kernel_data_;
 

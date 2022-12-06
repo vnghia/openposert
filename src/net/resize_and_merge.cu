@@ -118,6 +118,13 @@ void resize_and_pad_rbg_gpu(T* target_ptr, const unsigned char* const src_ptr,
       height_target, scale_factor);
 }
 
+template __global__ void resize_kernel(
+    float* target_ptr, const float* const source_ptr, const int width_source,
+    const int height_source, const int width_target, const int height_target);
+template __global__ void resize_kernel(
+    double* target_ptr, const double* const source_ptr, const int width_source,
+    const int height_source, const int width_target, const int height_target);
+
 template void resize_and_pad_rbg_gpu(
     float* target_ptr, const float* const src_ptr, const int width_source,
     const int height_source, const int width_target, const int height_target,

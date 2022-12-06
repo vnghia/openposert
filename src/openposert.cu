@@ -7,6 +7,7 @@
 #include "openposert/openposert.hpp"
 #include "openposert/pose/enum.hpp"
 #include "openposert/pose/pose_parameters.hpp"
+#include "openposert/utilities/fast_math.hpp"
 #include "spdlog/fmt/bundled/format.h"
 #include "spdlog/spdlog.h"
 #include "thrust/execution_policy.h"
@@ -32,6 +33,8 @@ OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
       net_input_width(net_input_dim.d[3]),
       net_input_height(net_input_dim.d[2]),
       net_output_dim(engine_.get_output_dim(0)),
+      net_output_width(net_output_dim.d[3]),
+      net_output_height(net_output_dim.d[2]),
       resize_factor((resize_factor_in > 0) ? resize_factor_in : 1),
       max_joints((max_joints_in > 0) ? max_joints_in
                                      : get_pose_number_body_parts(pose_model)),
@@ -122,12 +125,6 @@ void OpenPoseRT::malloc_memory() {
       input_data_.get(), input_width, input_height, input_channels,
       net_input_data_.get(), net_input_width, net_input_height);
 
-  auto resize_net_output_size =
-      engine_.get_output_size(0) * resize_factor * resize_factor;
-  resize_net_output_data_ = cuda_malloc_managed(resize_net_output_size);
-  spdlog::info("allocated {} byte for resized net output data",
-               resize_net_output_size);
-
   auto kernel_size = get_total_size(net_output_dim) * sizeof(int);
   kernel_data_ = cuda_malloc_managed<int>(kernel_size);
   spdlog::info("allocated {} byte for kernel data", kernel_size);
@@ -159,12 +156,15 @@ void OpenPoseRT::malloc_memory() {
 
   output_postprocessing_ = OutputPostprocessing(
       pose_keypoints_data_.get(), pose_scores_data_.get(),
-      net_output_data_.get(), static_cast<int>(net_output_dim.d[3]),
-      static_cast<int>(net_output_dim.d[2]), peak_dim, 1.f, number_body_parts,
-      number_body_part_pairs, max_person, min_subset_cnt, min_subset_score,
-      maximize_positive, inter_threshold, inter_min_above_threshold,
-      nms_threshold, peaks_data_.get(), pair_scores_data_.get(),
-      body_part_pair_gpu_.get(), pose_map_idx_gpu_.get());
+      net_output_data_.get(), static_cast<int>(net_output_dim.d[1]),
+      net_output_width, net_output_height,
+      fast_min(static_cast<float>(net_input_width) / net_output_width,
+               static_cast<float>(net_input_height) / net_output_height),
+      peak_dim, 1.f, number_body_parts, number_body_part_pairs, max_person,
+      min_subset_cnt, min_subset_score, maximize_positive, inter_threshold,
+      inter_min_above_threshold, nms_threshold, peaks_data_.get(),
+      pair_scores_data_.get(), body_part_pair_gpu_.get(),
+      pose_map_idx_gpu_.get());
 }
 
 void OpenPoseRT::forward() {
