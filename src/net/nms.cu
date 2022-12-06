@@ -1,7 +1,6 @@
 #include <array>
 #include <stdexcept>
 
-#include "openposert/core/common.hpp"
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/gpu/cuda_fast_math.hpp"
 #include "openposert/net/nms.hpp"
@@ -140,49 +139,45 @@ void nms_gpu(t* target_ptr, int* kernel_ptr, const t* const source_ptr,
              const t threshold, const std::array<int, 4>& target_size,
              const std::array<int, 4>& source_size, const t offset_x,
              const t offset_y) {
-  try {
-    const auto num = source_size[0];
-    const auto height = source_size[2];
-    const auto width = source_size[3];
-    const auto channels = target_size[1];
-    const auto max_peaks = target_size[2] - 1;
-    const auto image_offset = height * width;
-    const auto offset_target = (max_peaks + 1) * target_size[3];
+  const auto num = source_size[0];
+  const auto height = source_size[2];
+  const auto width = source_size[3];
+  const auto channels = target_size[1];
+  const auto max_peaks = target_size[2] - 1;
+  const auto image_offset = height * width;
+  const auto offset_target = (max_peaks + 1) * target_size[3];
 
-    const dim3 threads_per_block2d{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D};
-    const dim3 num_blocks2d{
-        get_number_cuda_blocks(width, threads_per_block2d.x),
-        get_number_cuda_blocks(height, threads_per_block2d.y)};
-    const dim3 threads_per_block1d{THREADS_PER_BLOCK};
-    const dim3 num_blocks1d{
-        get_number_cuda_blocks(image_offset, threads_per_block1d.x)};
+  const dim3 threads_per_block2d{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D};
+  const dim3 num_blocks2d{
+      get_number_cuda_blocks(width, threads_per_block2d.x),
+      get_number_cuda_blocks(height, threads_per_block2d.y)};
+  const dim3 threads_per_block1d{THREADS_PER_BLOCK};
+  const dim3 num_blocks1d{
+      get_number_cuda_blocks(image_offset, threads_per_block1d.x)};
 
-    const dim3 threads_per_block_register{THREADS_PER_BLOCK_1D,
-                                          THREADS_PER_BLOCK_1D, 1};
-    const dim3 num_blocks_register{
-        get_number_cuda_blocks(width, threads_per_block_register.x),
-        get_number_cuda_blocks(height, threads_per_block_register.y),
-        get_number_cuda_blocks(num * channels, threads_per_block_register.z)};
-    nms_register_kernel<<<num_blocks_register, threads_per_block_register>>>(
-        kernel_ptr, source_ptr, width, height, threshold);
+  const dim3 threads_per_block_register{THREADS_PER_BLOCK_1D,
+                                        THREADS_PER_BLOCK_1D, 1};
+  const dim3 num_blocks_register{
+      get_number_cuda_blocks(width, threads_per_block_register.x),
+      get_number_cuda_blocks(height, threads_per_block_register.y),
+      get_number_cuda_blocks(num * channels, threads_per_block_register.z)};
+  nms_register_kernel<<<num_blocks_register, threads_per_block_register>>>(
+      kernel_ptr, source_ptr, width, height, threshold);
 
-    auto kernel_thrust_ptr = thrust::device_pointer_cast(kernel_ptr);
-    thrust::exclusive_scan(kernel_thrust_ptr,
-                           kernel_thrust_ptr + num * channels * image_offset,
-                           kernel_thrust_ptr);
+  auto kernel_thrust_ptr = thrust::device_pointer_cast(kernel_ptr);
+  thrust::exclusive_scan(kernel_thrust_ptr,
+                         kernel_thrust_ptr + num * channels * image_offset,
+                         kernel_thrust_ptr);
 
-    const dim3 threads_per_block_write{THREADS_PER_BLOCK, 1};
-    const dim3 num_blocks_write{
-        get_number_cuda_blocks(image_offset, threads_per_block_write.x),
-        get_number_cuda_blocks(num * channels, threads_per_block_write.z)};
-    write_result_kernel<<<num_blocks_write, threads_per_block_write>>>(
-        target_ptr, image_offset, kernel_ptr, source_ptr, width, height,
-        max_peaks, offset_x, offset_y, offset_target);
+  const dim3 threads_per_block_write{THREADS_PER_BLOCK, 1};
+  const dim3 num_blocks_write{
+      get_number_cuda_blocks(image_offset, threads_per_block_write.x),
+      get_number_cuda_blocks(num * channels, threads_per_block_write.z)};
+  write_result_kernel<<<num_blocks_write, threads_per_block_write>>>(
+      target_ptr, image_offset, kernel_ptr, source_ptr, width, height,
+      max_peaks, offset_x, offset_y, offset_target);
 
-    cuda_check(__LINE__, __FUNCTION__, __FILE__);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-  }
+  cuda_check(__LINE__, __FUNCTION__, __FILE__);
 }
 
 template void nms_gpu(float* target_ptr, int* kernel_ptr,

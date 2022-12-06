@@ -29,17 +29,12 @@ template <typename t>
 void reorder_and_normalize(t* target_ptr, const unsigned char* const src_ptr,
                            const int width, const int height,
                            const int channels) {
-  try {
-    const dim3 threads_per_block{32, 1, 1};
-    const dim3 num_blocks{
-        get_number_cuda_blocks(width, threads_per_block.x),
-        get_number_cuda_blocks(height, threads_per_block.y),
-        get_number_cuda_blocks(channels, threads_per_block.z)};
-    reorder_and_normalize_kernel<<<num_blocks, threads_per_block>>>(
-        target_ptr, src_ptr, width, height, channels);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-  }
+  const dim3 threads_per_block{32, 1, 1};
+  const dim3 num_blocks{get_number_cuda_blocks(width, threads_per_block.x),
+                        get_number_cuda_blocks(height, threads_per_block.y),
+                        get_number_cuda_blocks(channels, threads_per_block.z)};
+  reorder_and_normalize_kernel<<<num_blocks, threads_per_block>>>(
+      target_ptr, src_ptr, width, height, channels);
 }
 
 template void reorder_and_normalize(float* target_ptr,

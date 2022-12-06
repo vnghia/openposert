@@ -1,4 +1,3 @@
-#include "openposert/core/common.hpp"
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/gpu/cuda_fast_math.hpp"
 #include "openposert/net/resize_and_merge.hpp"
@@ -90,19 +89,15 @@ void resize_and_pad_rbg_gpu(t* target_ptr, const t* const src_ptr,
                             const int width_source, const int height_source,
                             const int width_target, const int height_target,
                             const t scale_factor) {
-  try {
-    const auto channels = 3;
-    const dim3 threads_per_block{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D, 1};
-    const dim3 num_blocks{
-        get_number_cuda_blocks(width_target, threads_per_block.x),
-        get_number_cuda_blocks(height_target, threads_per_block.y),
-        get_number_cuda_blocks(channels, threads_per_block.z)};
-    resize_and_pad_kernel<<<num_blocks, threads_per_block>>>(
-        target_ptr, src_ptr, width_source, height_source, width_target,
-        height_target, scale_factor);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-  }
+  const auto channels = 3;
+  const dim3 threads_per_block{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D, 1};
+  const dim3 num_blocks{
+      get_number_cuda_blocks(width_target, threads_per_block.x),
+      get_number_cuda_blocks(height_target, threads_per_block.y),
+      get_number_cuda_blocks(channels, threads_per_block.z)};
+  resize_and_pad_kernel<<<num_blocks, threads_per_block>>>(
+      target_ptr, src_ptr, width_source, height_source, width_target,
+      height_target, scale_factor);
 }
 
 template <typename t>
@@ -112,19 +107,15 @@ void resize_and_pad_rbg_gpu(t* target_ptr, const unsigned char* const src_ptr,
                             const t scale_factor)
 
 {
-  try {
-    const auto channels = 3;
-    const dim3 threads_per_block{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D, 1};
-    const dim3 num_blocks{
-        get_number_cuda_blocks(width_target, threads_per_block.x),
-        get_number_cuda_blocks(height_target, threads_per_block.y),
-        get_number_cuda_blocks(channels, threads_per_block.z)};
-    resize_and_pad_kernel<<<num_blocks, threads_per_block>>>(
-        target_ptr, src_ptr, width_source, height_source, width_target,
-        height_target, scale_factor);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-  }
+  const auto channels = 3;
+  const dim3 threads_per_block{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D, 1};
+  const dim3 num_blocks{
+      get_number_cuda_blocks(width_target, threads_per_block.x),
+      get_number_cuda_blocks(height_target, threads_per_block.y),
+      get_number_cuda_blocks(channels, threads_per_block.z)};
+  resize_and_pad_kernel<<<num_blocks, threads_per_block>>>(
+      target_ptr, src_ptr, width_source, height_source, width_target,
+      height_target, scale_factor);
 }
 
 template void resize_and_pad_rbg_gpu(

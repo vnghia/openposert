@@ -4,7 +4,7 @@
 #include <string>
 
 #include "cuda_runtime.h"
-#include "openposert/core/common.hpp"
+#include "spdlog/spdlog.h"
 
 namespace openposert {
 
@@ -20,10 +20,9 @@ inline void cuda_check(const int line = -1, const std::string& function = "",
                        const std::string& file = "") {
   const auto error_code = cudaPeekAtLastError();
   if (error_code != cudaSuccess)
-    error("Cuda check failed (" + std::to_string(error_code) + " vs. " +
-              std::to_string(cudaSuccess) +
-              "): " + cudaGetErrorString(error_code),
-          line, function, file);
+    spdlog::critical("Cuda check failed {} ({}) in {} at {}:{}",
+                     std::to_string(error_code), cudaGetErrorString(error_code),
+                     function, file, line);
 }
 
 }  // namespace openposert

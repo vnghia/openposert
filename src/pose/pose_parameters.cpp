@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "openposert/core/common.hpp"
 #include "openposert/pose/enum.hpp"
 
 namespace openposert {
@@ -83,151 +82,75 @@ const std::array<std::vector<unsigned int>, kNumModel> POSE_BODY_PART_PAIRS{
 
 const std::map<unsigned int, std::string>& get_pose_body_part_mapping(
     const PoseModel pose_model) {
-  try {
-    return POSE_BODY_PART_MAPPING.at((int)pose_model);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return POSE_BODY_PART_MAPPING[(int)pose_model];
-  }
+  return POSE_BODY_PART_MAPPING.at((int)pose_model);
 }
 
 unsigned int get_pose_number_body_parts(const PoseModel pose_model) {
-  try {
-    return POSE_NUMBER_BODY_PARTS.at((int)pose_model);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0u;
-  }
+  return POSE_NUMBER_BODY_PARTS.at((int)pose_model);
 }
 
 const std::vector<unsigned int>& get_pose_part_pairs(
     const PoseModel pose_model) {
-  try {
-    return POSE_BODY_PART_PAIRS.at((int)pose_model);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return POSE_BODY_PART_PAIRS[(int)pose_model];
-  }
+  return POSE_BODY_PART_PAIRS.at((int)pose_model);
 }
 
 const std::vector<unsigned int>& get_pose_map_index(
     const PoseModel pose_model) {
-  try {
-    return POSE_MAP_INDEX.at((int)pose_model);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return POSE_MAP_INDEX[(int)pose_model];
-  }
+  return POSE_MAP_INDEX.at((int)pose_model);
 }
 
-unsigned int get_pose_max_peaks() {
-  try {
-    return POSE_MAX_PEOPLE;
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0u;
-  }
-}
+unsigned int get_pose_max_peaks() { return POSE_MAX_PEOPLE; }
 
-float get_pose_net_decrease_factor(const PoseModel pose_model) {
-  try {
-    return 8.f;
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0.f;
-  }
-}
+float get_pose_net_decrease_factor(const PoseModel pose_model) { return 8.f; }
 
 unsigned int pose_body_part_map_string_to_key(
     const PoseModel pose_model, const std::vector<std::string>& strings) {
-  try {
-    const auto& pose_body_part_mapping =
-        POSE_BODY_PART_MAPPING[(int)pose_model];
-    for (const auto& string : strings)
-      for (const auto& pair : pose_body_part_mapping)
-        if (pair.second == string) return pair.first;
-    error("string(s) could not be found.", __LINE__, __FUNCTION__, __FILE__);
-    return 0;
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0;
-  }
+  const auto& pose_body_part_mapping = POSE_BODY_PART_MAPPING[(int)pose_model];
+  for (const auto& string : strings)
+    for (const auto& pair : pose_body_part_mapping)
+      if (pair.second == string) return pair.first;
+  return 0;
 }
 
 unsigned int pose_body_part_map_string_to_key(const PoseModel pose_model,
                                               const std::string& string) {
-  try {
-    return pose_body_part_map_string_to_key(pose_model,
-                                            std::vector<std::string>{string});
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0;
-  }
+  return pose_body_part_map_string_to_key(pose_model,
+                                          std::vector<std::string>{string});
 }
 
 // default model parameters
 // they might be modified on running time
 float get_pose_default_nms_threshold(const PoseModel pose_model,
                                      const bool maximize_positives) {
-  try {
-    return (maximize_positives ? 0.02f : 0.05f);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0.f;
-  }
+  return (maximize_positives ? 0.02f : 0.05f);
 }
 
 float get_pose_default_connect_inter_min_above_threshold(
     const bool maximize_positives) {
-  try {
-    return (maximize_positives ? 0.75f : 0.95f);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0.f;
-  }
+  return (maximize_positives ? 0.75f : 0.95f);
 }
 
 float get_pose_default_connect_inter_threshold(const PoseModel pose_model,
                                                const bool maximize_positives) {
-  try {
-    // return (maximize_positives ? 0.01f : 0.5f); // 0.485 but much less
-    // false positive connections return (maximize_positives ? 0.01f : 0.1f);
-    // // 0.518 return (maximize_positives ? 0.01f : 0.075f); // 0.521
-    return (maximize_positives ? 0.01f : 0.05f);  // 0.523
-    // return (maximize_positives ? 0.01f : 0.01f); // 0.527 but huge amount of
-    // false positives joints
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0.f;
-  }
+  // return (maximize_positives ? 0.01f : 0.5f); // 0.485 but much less
+  // false positive connections return (maximize_positives ? 0.01f : 0.1f);
+  // // 0.518 return (maximize_positives ? 0.01f : 0.075f); // 0.521
+  return (maximize_positives ? 0.01f : 0.05f);  // 0.523
+  // return (maximize_positives ? 0.01f : 0.01f); // 0.527 but huge amount of
+  // false positives joints
 }
 
 unsigned int get_pose_default_min_subset_cnt(const bool maximize_positives) {
-  try {
-    return (maximize_positives ? 2u : 3u);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0u;
-  }
+  return (maximize_positives ? 2u : 3u);
 }
 
 float get_pose_default_connect_min_subset_score(const bool maximize_positives) {
-  try {
-    return (maximize_positives ? 0.05f : 0.4f);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return 0.f;
-  }
+  return (maximize_positives ? 0.05f : 0.4f);
 }
 
 bool add_bkg_channel(const PoseModel pose_model) {
-  try {
-    return (POSE_BODY_PART_MAPPING[(int)pose_model].size() !=
-            POSE_NUMBER_BODY_PARTS[(int)pose_model]);
-  } catch (const std::exception& e) {
-    error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-    return false;
-  }
+  return (POSE_BODY_PART_MAPPING[(int)pose_model].size() !=
+          POSE_NUMBER_BODY_PARTS[(int)pose_model]);
 }
 
 }  // namespace openposert

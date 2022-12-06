@@ -2,8 +2,8 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
-#include "openposert/core/common.hpp"
 #include "openposert/pose/enum.hpp"
 
 namespace openposert {
