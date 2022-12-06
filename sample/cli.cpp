@@ -2,6 +2,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include "cxxopts.hpp"
+#include "minrt/utils.hpp"
 #include "opencv2/opencv.hpp"
 #include "openposert/openposert.hpp"
 #include "openposert/pose/enum.hpp"
@@ -41,20 +42,21 @@ int main(int argc, char* argv[]) {
   const auto pose_key_points = openposert.get_pose_keypoints();
 
   unsigned long frame_count = 0;
-  while (cap.read(frame)) {
-    if (++frame_count % 2) continue;
+  MINRT_EXECUTION_TIMER(
+      "OpenPoseRT", while (cap.read(frame)) {
+        if (++frame_count % 2) continue;
 
-    openposert.forward();
+        openposert.forward();
 
-    for (size_t i = 0; i < openposert.get_pose_keypoints_size() / 3; i++) {
-      cv::circle(frame,
-                 cv::Point(pose_key_points[i * 3] * 24,
-                           pose_key_points[i * 3 + 1] * 24),
-                 5, cv::Scalar(0, 0, 255), -1);
-    }
-    cv::imshow("OpenPoseRT", frame);
-    if (cv::waitKey(1) >= 0) break;
-  }
+        for (size_t i = 0; i < openposert.get_pose_keypoints_size() / 3; i++) {
+          cv::circle(frame,
+                     cv::Point(pose_key_points[i * 3] * 24,
+                               pose_key_points[i * 3 + 1] * 24),
+                     5, cv::Scalar(0, 0, 255), -1);
+        }
+        cv::imshow("OpenPoseRT", frame);
+        if (cv::waitKey(1) >= 0) break;
+      });
 
   return 0;
 }
