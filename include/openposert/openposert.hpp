@@ -4,7 +4,6 @@
 #include <memory>
 
 #include "minrt/minrt.hpp"
-#include "openposert/core/point.hpp"
 #include "openposert/net/input_preprocessing.hpp"
 #include "openposert/net/output_postprocessing.hpp"
 #include "openposert/pose/enum.hpp"
@@ -66,11 +65,10 @@ class OpenPoseRT {
 
   const std::array<int, 4> nms_source_size;
   const std::array<int, 4> nms_target_size;
-  const Point<float> nms_offset = {0.5, 0.5};
+  const float nms_offset_x = 0.5;
+  const float nms_offset_y = 0.5;
 
   const float nms_threshold;
-
-  const Point<int> body_part_net_output_size;
 
   const float inter_min_above_threshold;
   const float inter_threshold;

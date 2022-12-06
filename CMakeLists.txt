@@ -63,8 +63,6 @@ include(openposert/external/minrt)
 
 # openposert
 add_library(${PROJECT_NAME}
-  src/core/point.cpp
-
   src/net/input_preprocessing.cu
   src/net/nms.cu
   src/net/output_postprocessing.cu

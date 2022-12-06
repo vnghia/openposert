@@ -1,5 +1,4 @@
 #include "minrt/utils.hpp"
-#include "openposert/core/point.hpp"
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/net/input_preprocessing.hpp"
 #include "openposert/net/nms.hpp"
@@ -46,7 +45,6 @@ OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
           (nms_threshold_in > 0)
               ? nms_threshold_in
               : get_pose_default_nms_threshold(pose_model, maximize_positive)),
-      body_part_net_output_size({net_output_dim.d[3], net_output_dim.d[2]}),
       inter_min_above_threshold(
           (inter_min_above_threshold_in > 0)
               ? inter_min_above_threshold_in
@@ -190,7 +188,7 @@ void OpenPoseRT::forward() {
   nms_gpu(static_cast<float *>(peaks_data_.get()),
           static_cast<int *>(kernel_data_.get()),
           static_cast<float *>(net_output_data_.get()), nms_threshold,
-          nms_target_size, nms_source_size, nms_offset);
+          nms_target_size, nms_source_size, nms_offset_x, nms_offset_y);
 
   number_people_ = output_postprocessing_.postprocessing_gpu();
 }

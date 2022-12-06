@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 #include "openposert/core/common.hpp"
-#include "openposert/core/point.hpp"
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/gpu/cuda_fast_math.hpp"
 #include "openposert/net/nms.hpp"
@@ -139,7 +138,8 @@ __global__ void write_result_kernel(t* output, const int length,
 template <typename t>
 void nms_gpu(t* target_ptr, int* kernel_ptr, const t* const source_ptr,
              const t threshold, const std::array<int, 4>& target_size,
-             const std::array<int, 4>& source_size, const Point<t>& offset) {
+             const std::array<int, 4>& source_size, const t offset_x,
+             const t offset_y) {
   try {
     const auto num = source_size[0];
     const auto height = source_size[2];
@@ -177,7 +177,7 @@ void nms_gpu(t* target_ptr, int* kernel_ptr, const t* const source_ptr,
         get_number_cuda_blocks(num * channels, threads_per_block_write.z)};
     write_result_kernel<<<num_blocks_write, threads_per_block_write>>>(
         target_ptr, image_offset, kernel_ptr, source_ptr, width, height,
-        max_peaks, offset.x, offset.y, offset_target);
+        max_peaks, offset_x, offset_y, offset_target);
 
     cuda_check(__LINE__, __FUNCTION__, __FILE__);
   } catch (const std::exception& e) {
@@ -189,11 +189,11 @@ template void nms_gpu(float* target_ptr, int* kernel_ptr,
                       const float* const source_ptr, const float threshold,
                       const std::array<int, 4>& target_size,
                       const std::array<int, 4>& source_size,
-                      const Point<float>& offset);
+                      const float offset_x, const float offset_y);
 template void nms_gpu(double* target_ptr, int* kernel_ptr,
                       const double* const source_ptr, const double threshold,
                       const std::array<int, 4>& target_size,
                       const std::array<int, 4>& source_size,
-                      const Point<double>& offset);
+                      const double offset_x, const double offset_y);
 
 }  // namespace openposert
