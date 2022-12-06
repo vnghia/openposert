@@ -13,10 +13,10 @@ const auto THREADS_PER_BLOCK_1D = 16u;
 const auto THREADS_PER_BLOCK = 512u;
 
 // note: shared memory made this function slower, from 1.2 ms to about 2 ms.
-template <typename t>
-__global__ void nms_register_kernel(int* kernel_ptr, const t* const source_ptr,
+template <typename T>
+__global__ void nms_register_kernel(int* kernel_ptr, const T* const source_ptr,
                                     const int w, const int h,
-                                    const t threshold) {
+                                    const T threshold) {
   // get pixel location (x,y)
   const auto x = blockIdx.x * blockDim.x + threadIdx.x;
   const auto y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -25,7 +25,7 @@ __global__ void nms_register_kernel(int* kernel_ptr, const t* const source_ptr,
   const auto index = y * w + x;
 
   auto* kernel_ptr_offset = &kernel_ptr[channel_offset];
-  const t* const source_ptr_offset = &source_ptr[channel_offset];
+  const T* const source_ptr_offset = &source_ptr[channel_offset];
 
   if (0 < x && x < (w - 1) && 0 < y && y < (h - 1)) {
     const auto value = source_ptr_offset[index];
@@ -51,12 +51,12 @@ __global__ void nms_register_kernel(int* kernel_ptr, const t* const source_ptr,
     kernel_ptr_offset[index] = 0;
 }
 
-template <typename t>
-__global__ void write_result_kernel(t* output, const int length,
+template <typename T>
+__global__ void write_result_kernel(T* output, const int length,
                                     const int* const kernel_ptr,
-                                    const t* const source_ptr, const int width,
+                                    const T* const source_ptr, const int width,
                                     const int height, const int max_peaks,
-                                    const t offset_x, const t offset_y,
+                                    const T offset_x, const T offset_y,
                                     const int offset_target) {
   __shared__ int local[THREADS_PER_BLOCK + 1];  // one more
   __shared__ int kernel0;                       // offset for kernel
@@ -91,9 +91,9 @@ __global__ void write_result_kernel(t* output, const int length,
         // accurate peak location: considered neighbors
         if (peak_index < max_peaks)  // limitation
         {
-          t x_acc = 0.f;
-          t y_acc = 0.f;
-          t score_acc = 0.f;
+          T x_acc = 0.f;
+          T y_acc = 0.f;
+          T score_acc = 0.f;
           const auto d_width = 3;
           const auto d_height = 3;
           for (auto dy = -d_height; dy <= d_height; dy++) {
@@ -134,11 +134,11 @@ __global__ void write_result_kernel(t* output, const int length,
   }
 }
 
-template <typename t>
-void nms_gpu(t* target_ptr, int* kernel_ptr, const t* const source_ptr,
-             const t threshold, const std::array<int, 4>& target_size,
-             const std::array<int, 4>& source_size, const t offset_x,
-             const t offset_y) {
+template <typename T>
+void nms_gpu(T* target_ptr, int* kernel_ptr, const T* const source_ptr,
+             const T threshold, const std::array<int, 4>& target_size,
+             const std::array<int, 4>& source_size, const T offset_x,
+             const T offset_y) {
   const auto num = source_size[0];
   const auto height = source_size[2];
   const auto width = source_size[3];

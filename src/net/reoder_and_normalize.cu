@@ -8,8 +8,8 @@
 
 namespace openposert {
 
-template <typename t>
-__global__ void reorder_and_normalize_kernel(t* target_ptr,
+template <typename T>
+__global__ void reorder_and_normalize_kernel(T* target_ptr,
                                              const unsigned char* const src_ptr,
                                              const int width, const int height,
                                              const int channels) {
@@ -21,12 +21,12 @@ __global__ void reorder_and_normalize_kernel(t* target_ptr,
     const auto channel_offset = c * width * height;
     const auto target_index = channel_offset + y * width + x;
     const auto src_index = (origin_frame_ptr_offset_y + x) * channels + c;
-    target_ptr[target_index] = t(src_ptr[src_index]) * t(1 / 256.f) - t(0.5f);
+    target_ptr[target_index] = T(src_ptr[src_index]) * T(1 / 256.f) - T(0.5f);
   }
 }
 
-template <typename t>
-void reorder_and_normalize(t* target_ptr, const unsigned char* const src_ptr,
+template <typename T>
+void reorder_and_normalize(T* target_ptr, const unsigned char* const src_ptr,
                            const int width, const int height,
                            const int channels) {
   const dim3 threads_per_block{32, 1, 1};
