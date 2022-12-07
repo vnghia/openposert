@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "minrt/utils.hpp"
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/gpu/cuda_fast_math.hpp"
@@ -165,10 +167,16 @@ OutputPostprocessing::OutputPostprocessing(
   const int paf_total_size_int = paf_total_size * sizeof(int);
   const int paf_total_size_float = paf_total_size * sizeof(float);
 
-  const int resize_net_output_size = net_output_channels *
-                                     resize_net_output_height *
-                                     resize_net_output_width * sizeof(float);
-  resize_net_output_data_ = cuda_malloc_managed<float>(resize_net_output_size);
+  if (resize_factor > 1) {
+    const int resize_net_output_size = net_output_channels *
+                                       resize_net_output_height *
+                                       resize_net_output_width * sizeof(float);
+    resize_net_output_data_ =
+        cuda_malloc_managed<float>(resize_net_output_size);
+  } else {
+    resize_net_output_data_ =
+        std::shared_ptr<float>(net_output_ptr, [](float* p) {});
+  }
 
   auto kernel_size = net_output_channels * resize_net_output_height *
                      resize_net_output_width * sizeof(int);
@@ -201,7 +209,7 @@ OutputPostprocessing::OutputPostprocessing(
 }
 
 int OutputPostprocessing::postprocessing_gpu() {
-  {
+  if (resize_factor > 1) {
     const dim3 threads_per_block{16, 16, 1};
     const dim3 num_blocks{
         get_number_cuda_blocks(resize_net_output_width, threads_per_block.x),

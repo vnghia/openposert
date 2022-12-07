@@ -139,13 +139,11 @@ void OpenPoseRT::malloc_memory() {
   output_postprocessing_ = OutputPostprocessing(
       pose_keypoints_data_.get(), pose_scores_data_.get(),
       net_output_data_.get(), static_cast<int>(net_output_dim.d[1]),
-      net_output_width, net_output_height,
-      fast_min(static_cast<float>(net_input_width) / net_output_width,
-               static_cast<float>(net_input_height) / net_output_height),
-      max_joints, peak_dim, nms_threshold, 1.f, number_body_parts,
-      number_body_part_pairs, max_person, min_subset_cnt, min_subset_score,
-      maximize_positive, inter_threshold, inter_min_above_threshold,
-      nms_threshold, body_part_pair_gpu_.get(), pose_map_idx_gpu_.get());
+      net_output_width, net_output_height, 1, max_joints, peak_dim,
+      nms_threshold, 1.f, number_body_parts, number_body_part_pairs, max_person,
+      min_subset_cnt, min_subset_score, maximize_positive, inter_threshold,
+      inter_min_above_threshold, nms_threshold, body_part_pair_gpu_.get(),
+      pose_map_idx_gpu_.get());
 }
 
 void OpenPoseRT::forward() {
