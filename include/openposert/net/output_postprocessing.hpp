@@ -10,18 +10,15 @@ class OutputPostprocessing {
  public:
   OutputPostprocessing() {}
 
-  OutputPostprocessing(float* pose_keypoints, float* pose_scores,
-                       float* net_output_ptr, int net_output_channels,
-                       int net_output_width, int net_output_height,
-                       float resize_factor, int max_joints, int peak_dim,
-                       float nms_threshold, float scale_factor,
-                       int number_body_parts, int number_body_part_pairs,
-                       int max_peaks, int min_subset_cnt,
-                       float min_subset_score, bool maximize_positives,
-                       float inter_threshold, float inter_min_above_threshold,
-                       float default_nms_threshold, float* pair_scores_ptr,
-                       unsigned int* body_part_pairs_ptr,
-                       unsigned int* pose_map_idx_ptr);
+  OutputPostprocessing(
+      float* pose_keypoints, float* pose_scores, float* net_output_ptr,
+      int net_output_channels, int net_output_width, int net_output_height,
+      float resize_factor, int max_joints, int peak_dim, float nms_threshold,
+      float scale_factor, int number_body_parts, int number_body_part_pairs,
+      int max_peaks, int min_subset_cnt, float min_subset_score,
+      bool maximize_positives, float inter_threshold,
+      float inter_min_above_threshold, float default_nms_threshold,
+      unsigned int* body_part_pairs_ptr, unsigned int* pose_map_idx_ptr);
 
   int postprocessing_gpu();
 
@@ -59,7 +56,6 @@ class OutputPostprocessing {
   float inter_min_above_threshold;
   float default_nms_threshold;
 
-  float* pair_scores_ptr;
   unsigned int* body_part_pairs_ptr;
   unsigned int* pose_map_idx_ptr;
 
@@ -110,6 +106,8 @@ class OutputPostprocessing {
 
   std::shared_ptr<int> kernel_data_;
   std::shared_ptr<float> peaks_data_;
+
+  std::shared_ptr<float> pair_scores_data_;
 
   std::shared_ptr<int> paf_sorted_index_;
   std::shared_ptr<float> paf_total_score_data_;

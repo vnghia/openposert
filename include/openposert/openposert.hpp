@@ -91,8 +91,6 @@ class OpenPoseRT {
 
   std::shared_ptr<float> net_output_data_;
 
-  std::shared_ptr<float> pair_scores_data_;
-
   int number_people_;
 
   std::shared_ptr<float> pose_keypoints_data_;

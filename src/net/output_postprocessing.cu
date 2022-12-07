@@ -131,8 +131,7 @@ OutputPostprocessing::OutputPostprocessing(
     int max_peaks, int min_subset_cnt, float min_subset_score,
     bool maximize_positives, float inter_threshold,
     float inter_min_above_threshold, float default_nms_threshold,
-    float* pair_scores_ptr, unsigned int* body_part_pairs_ptr,
-    unsigned int* pose_map_idx_ptr)
+    unsigned int* body_part_pairs_ptr, unsigned int* pose_map_idx_ptr)
     : net_output_ptr(net_output_ptr),
       net_output_channels(net_output_channels),
       net_output_width(net_output_width),
@@ -158,7 +157,6 @@ OutputPostprocessing::OutputPostprocessing(
       inter_threshold(inter_threshold),
       inter_min_above_threshold(inter_min_above_threshold),
       default_nms_threshold(default_nms_threshold),
-      pair_scores_ptr(pair_scores_ptr),
       body_part_pairs_ptr(body_part_pairs_ptr),
       pose_map_idx_ptr(pose_map_idx_ptr),
       paf_total_size(number_body_part_pairs * max_peaks * max_peaks),
@@ -178,6 +176,10 @@ OutputPostprocessing::OutputPostprocessing(
 
   auto peaks_size = max_joints * (max_peaks + 1) * peak_dim * sizeof(float);
   peaks_data_ = cuda_malloc_managed<float>(peaks_size);
+
+  auto pair_score_size =
+      number_body_part_pairs * max_peaks * max_peaks * sizeof(float);
+  pair_scores_data_ = cuda_malloc_managed<float>(pair_score_size);
 
   paf_sorted_index_ = cuda_malloc_managed<int>(paf_total_size_int);
   paf_total_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
@@ -220,7 +222,7 @@ int OutputPostprocessing::postprocessing_gpu() {
       get_number_cuda_blocks(max_peaks, threads_per_block.y),
       get_number_cuda_blocks(number_body_part_pairs, threads_per_block.z)};
   paf_score_kernel<<<num_blocks, threads_per_block>>>(
-      pair_scores_ptr, resize_net_output_data_.get(), peaks_data_.get(),
+      pair_scores_data_.get(), resize_net_output_data_.get(), peaks_data_.get(),
       body_part_pairs_ptr, pose_map_idx_ptr, max_peaks, number_body_part_pairs,
       resize_net_output_width, resize_net_output_height, inter_threshold,
       inter_min_above_threshold, default_nms_threshold);
@@ -231,9 +233,9 @@ int OutputPostprocessing::postprocessing_gpu() {
   paf_ptr_into_vector(paf_sorted_index_.get(), paf_total_score_data_.get(),
                       paf_score_data_.get(), paf_pair_index_data_.get(),
                       paf_index_a_data_.get(), paf_index_b_data_.get(),
-                      paf_total_size, pair_scores_ptr, peaks_data_.get(),
-                      max_peaks, body_part_pairs_ptr, number_body_part_pairs,
-                      pair_connections_count_);
+                      paf_total_size, pair_scores_data_.get(),
+                      peaks_data_.get(), max_peaks, body_part_pairs_ptr,
+                      number_body_part_pairs, pair_connections_count_);
 
   people_vector_count_ = 0;
   thrust::fill_n(thrust::host, person_assigned_data_.get(),

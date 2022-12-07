@@ -120,11 +120,6 @@ void OpenPoseRT::malloc_memory() {
       input_data_.get(), input_width, input_height, input_channels,
       net_input_data_.get(), net_input_width, net_input_height);
 
-  auto peaks_score_size =
-      number_body_part_pairs * max_person * max_person * sizeof(float);
-  pair_scores_data_ = cuda_malloc_managed<float>(peaks_score_size);
-  spdlog::info("allocated {} byte for peaks score data", peaks_score_size);
-
   auto pose_keypoints_size =
       max_person * number_body_parts * peak_dim * sizeof(float);
   pose_keypoints_data_ = cuda_malloc_managed<float>(pose_keypoints_size);
@@ -150,8 +145,7 @@ void OpenPoseRT::malloc_memory() {
       max_joints, peak_dim, nms_threshold, 1.f, number_body_parts,
       number_body_part_pairs, max_person, min_subset_cnt, min_subset_score,
       maximize_positive, inter_threshold, inter_min_above_threshold,
-      nms_threshold, pair_scores_data_.get(), body_part_pair_gpu_.get(),
-      pose_map_idx_gpu_.get());
+      nms_threshold, body_part_pair_gpu_.get(), pose_map_idx_gpu_.get());
 }
 
 void OpenPoseRT::forward() {
