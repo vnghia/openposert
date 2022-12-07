@@ -50,8 +50,10 @@ int main(int argc, char* argv[]) {
 
         for (size_t i = 0; i < openposert.get_pose_keypoints_size() / 3; i++) {
           cv::circle(frame,
-                     cv::Point(pose_key_points[i * 3] * 24,
-                               pose_key_points[i * 3 + 1] * 24),
+                     cv::Point(pose_key_points[i * 3] * input_width /
+                                   openposert.net_output_width,
+                               pose_key_points[i * 3 + 1] * input_width /
+                                   openposert.net_output_width),
                      5, cv::Scalar(0, 0, 255), -1);
         }
         cv::imshow("OpenPoseRT", frame);
