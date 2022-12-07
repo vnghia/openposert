@@ -65,11 +65,6 @@ class OpenPoseRT {
   // x y score
   const int peak_dim = 3;
 
-  const std::array<int, 4> nms_source_size;
-  const std::array<int, 4> nms_target_size;
-  const float nms_offset_x = 0.5;
-  const float nms_offset_y = 0.5;
-
   const float nms_threshold;
 
   const float inter_min_above_threshold;
@@ -95,10 +90,6 @@ class OpenPoseRT {
   InputPreprocessing input_preprocessing_;
 
   std::shared_ptr<float> net_output_data_;
-
-  std::shared_ptr<int> kernel_data_;
-
-  std::shared_ptr<float> peaks_data_;
 
   std::shared_ptr<float> pair_scores_data_;
 

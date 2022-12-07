@@ -39,11 +39,6 @@ OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
       max_joints((max_joints_in > 0) ? max_joints_in
                                      : get_pose_number_body_parts(pose_model)),
       max_person((max_person_in > 0) ? max_person_in : 127),
-      nms_source_size({static_cast<int>(net_output_dim.d[0]),
-                       static_cast<int>(net_output_dim.d[1]),
-                       static_cast<int>(net_output_dim.d[2]),
-                       static_cast<int>(net_output_dim.d[3])}),
-      nms_target_size({1, max_joints, max_person + 1, peak_dim}),
       nms_threshold(
           (nms_threshold_in > 0)
               ? nms_threshold_in
@@ -125,14 +120,6 @@ void OpenPoseRT::malloc_memory() {
       input_data_.get(), input_width, input_height, input_channels,
       net_input_data_.get(), net_input_width, net_input_height);
 
-  auto kernel_size = get_total_size(net_output_dim) * sizeof(int);
-  kernel_data_ = cuda_malloc_managed<int>(kernel_size);
-  spdlog::info("allocated {} byte for kernel data", kernel_size);
-
-  auto peaks_size = max_joints * (max_person + 1) * peak_dim * sizeof(float);
-  peaks_data_ = cuda_malloc_managed<float>(peaks_size);
-  spdlog::info("allocated {} byte for peaks data", peaks_size);
-
   auto peaks_score_size =
       number_body_part_pairs * max_person * max_person * sizeof(float);
   pair_scores_data_ = cuda_malloc_managed<float>(peaks_score_size);
@@ -160,10 +147,10 @@ void OpenPoseRT::malloc_memory() {
       net_output_width, net_output_height,
       fast_min(static_cast<float>(net_input_width) / net_output_width,
                static_cast<float>(net_input_height) / net_output_height),
-      peak_dim, 1.f, number_body_parts, number_body_part_pairs, max_person,
-      min_subset_cnt, min_subset_score, maximize_positive, inter_threshold,
-      inter_min_above_threshold, nms_threshold, peaks_data_.get(),
-      pair_scores_data_.get(), body_part_pair_gpu_.get(),
+      max_joints, peak_dim, nms_threshold, 1.f, number_body_parts,
+      number_body_part_pairs, max_person, min_subset_cnt, min_subset_score,
+      maximize_positive, inter_threshold, inter_min_above_threshold,
+      nms_threshold, pair_scores_data_.get(), body_part_pair_gpu_.get(),
       pose_map_idx_gpu_.get());
 }
 
@@ -172,10 +159,6 @@ void OpenPoseRT::forward() {
 
   engine_.forward();
   cudaDeviceSynchronize();
-
-  nms_gpu(peaks_data_.get(), kernel_data_.get(), net_output_data_.get(),
-          nms_threshold, nms_target_size, nms_source_size, nms_offset_x,
-          nms_offset_y);
 
   number_people_ = output_postprocessing_.postprocessing_gpu();
 }

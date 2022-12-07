@@ -1,6 +1,7 @@
 #include "minrt/utils.hpp"
 #include "openposert/gpu/cuda.hpp"
 #include "openposert/gpu/cuda_fast_math.hpp"
+#include "openposert/net/nms.hpp"
 #include "openposert/net/output_postprocessing.hpp"
 #include "openposert/net/resize_and_merge.hpp"
 #include "openposert/utilities/fast_math.hpp"
@@ -125,12 +126,13 @@ __global__ void paf_score_kernel(
 OutputPostprocessing::OutputPostprocessing(
     float* pose_keypoints, float* pose_scores, float* net_output_ptr,
     int net_output_channels, int net_output_width, int net_output_height,
-    float resize_factor, int peak_dim, float scale_factor,
-    int number_body_parts, int number_body_part_pairs, int max_peaks,
-    int min_subset_cnt, float min_subset_score, bool maximize_positives,
-    float inter_threshold, float inter_min_above_threshold,
-    float default_nms_threshold, float* peaks_ptr, float* pair_scores_ptr,
-    unsigned int* body_part_pairs_ptr, unsigned int* pose_map_idx_ptr)
+    float resize_factor, int max_joints, int peak_dim, float nms_threshold,
+    float scale_factor, int number_body_parts, int number_body_part_pairs,
+    int max_peaks, int min_subset_cnt, float min_subset_score,
+    bool maximize_positives, float inter_threshold,
+    float inter_min_above_threshold, float default_nms_threshold,
+    float* pair_scores_ptr, unsigned int* body_part_pairs_ptr,
+    unsigned int* pose_map_idx_ptr)
     : net_output_ptr(net_output_ptr),
       net_output_channels(net_output_channels),
       net_output_width(net_output_width),
@@ -140,7 +142,12 @@ OutputPostprocessing::OutputPostprocessing(
           static_cast<int>(resize_factor * net_output_height)),
       resize_net_output_width(
           static_cast<int>(resize_factor * net_output_width)),
+      max_joints(max_joints),
       peak_dim(peak_dim),
+      nms_source_size({1, net_output_channels, resize_net_output_height,
+                       resize_net_output_width}),
+      nms_target_size({1, max_joints, max_peaks + 1, peak_dim}),
+      nms_threshold(nms_threshold),
       scale_factor(scale_factor),
       number_body_parts(number_body_parts),
       number_body_part_pairs(number_body_part_pairs),
@@ -151,7 +158,6 @@ OutputPostprocessing::OutputPostprocessing(
       inter_threshold(inter_threshold),
       inter_min_above_threshold(inter_min_above_threshold),
       default_nms_threshold(default_nms_threshold),
-      peaks_ptr(peaks_ptr),
       pair_scores_ptr(pair_scores_ptr),
       body_part_pairs_ptr(body_part_pairs_ptr),
       pose_map_idx_ptr(pose_map_idx_ptr),
@@ -165,6 +171,13 @@ OutputPostprocessing::OutputPostprocessing(
                                      resize_net_output_height *
                                      resize_net_output_width * sizeof(float);
   resize_net_output_data_ = cuda_malloc_managed<float>(resize_net_output_size);
+
+  auto kernel_size = net_output_channels * resize_net_output_height *
+                     resize_net_output_width * sizeof(int);
+  kernel_data_ = cuda_malloc_managed<int>(kernel_size);
+
+  auto peaks_size = max_joints * (max_peaks + 1) * peak_dim * sizeof(float);
+  peaks_data_ = cuda_malloc_managed<float>(peaks_size);
 
   paf_sorted_index_ = cuda_malloc_managed<int>(paf_total_size_int);
   paf_total_score_data_ = cuda_malloc_managed<float>(paf_total_size_float);
@@ -197,16 +210,20 @@ int OutputPostprocessing::postprocessing_gpu() {
         net_output_height, resize_net_output_width, resize_net_output_height);
   }
 
+  nms_gpu(peaks_data_.get(), kernel_data_.get(), resize_net_output_data_.get(),
+          nms_threshold, nms_target_size, nms_source_size, nms_offset_x,
+          nms_offset_y);
+
   const dim3 threads_per_block{128, 1, 1};
   const dim3 num_blocks{
       get_number_cuda_blocks(max_peaks, threads_per_block.x),
       get_number_cuda_blocks(max_peaks, threads_per_block.y),
       get_number_cuda_blocks(number_body_part_pairs, threads_per_block.z)};
   paf_score_kernel<<<num_blocks, threads_per_block>>>(
-      pair_scores_ptr, net_output_ptr, peaks_ptr, body_part_pairs_ptr,
-      pose_map_idx_ptr, max_peaks, number_body_part_pairs, net_output_width,
-      net_output_height, inter_threshold, inter_min_above_threshold,
-      default_nms_threshold);
+      pair_scores_ptr, resize_net_output_data_.get(), peaks_data_.get(),
+      body_part_pairs_ptr, pose_map_idx_ptr, max_peaks, number_body_part_pairs,
+      resize_net_output_width, resize_net_output_height, inter_threshold,
+      inter_min_above_threshold, default_nms_threshold);
 
   pair_connections_count_ = 0;
   thrust::sequence(thrust::host, paf_sorted_index_.get(),
@@ -214,8 +231,8 @@ int OutputPostprocessing::postprocessing_gpu() {
   paf_ptr_into_vector(paf_sorted_index_.get(), paf_total_score_data_.get(),
                       paf_score_data_.get(), paf_pair_index_data_.get(),
                       paf_index_a_data_.get(), paf_index_b_data_.get(),
-                      paf_total_size, pair_scores_ptr, peaks_ptr, max_peaks,
-                      body_part_pairs_ptr, number_body_part_pairs,
+                      paf_total_size, pair_scores_ptr, peaks_data_.get(),
+                      max_peaks, body_part_pairs_ptr, number_body_part_pairs,
                       pair_connections_count_);
 
   people_vector_count_ = 0;
@@ -228,15 +245,15 @@ int OutputPostprocessing::postprocessing_gpu() {
       person_assigned_data_.get(), person_removed_data_.get(),
       paf_sorted_index_.get(), paf_score_data_.get(),
       paf_pair_index_data_.get(), paf_index_a_data_.get(),
-      paf_index_b_data_.get(), pair_connections_count_, peaks_ptr, max_peaks,
-      body_part_pairs_ptr, number_body_parts, people_vector_count_);
+      paf_index_b_data_.get(), pair_connections_count_, peaks_data_.get(),
+      max_peaks, body_part_pairs_ptr, number_body_parts, people_vector_count_);
 
   number_people_ = 0;
   remove_people_below_thresholds_and_fill_faces(
       valid_subset_indexes_data_.get(), number_people_,
       people_vector_body_data_.get(), people_vector_score_data_.get(),
       person_removed_data_.get(), people_vector_count_, number_body_parts,
-      min_subset_cnt, min_subset_score, maximize_positives, peaks_ptr);
+      min_subset_cnt, min_subset_score, maximize_positives, peaks_data_.get());
 
   thrust::fill_n(thrust::host, pose_keypoints_,
                  number_people_ * number_body_parts * peak_dim, 0);
@@ -245,7 +262,7 @@ int OutputPostprocessing::postprocessing_gpu() {
   people_vector_to_people_array(
       pose_keypoints_, pose_scores_, scale_factor,
       people_vector_body_data_.get(), people_vector_score_data_.get(),
-      valid_subset_indexes_data_.get(), people_vector_count_, peaks_ptr,
+      valid_subset_indexes_data_.get(), people_vector_count_, peaks_data_.get(),
       number_people_, number_body_parts, number_body_part_pairs);
 
   return number_people_;
