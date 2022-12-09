@@ -61,6 +61,9 @@ find_package(OpenCV REQUIRED)
 # MinRT
 include(openposert/external/minrt)
 
+# Half
+include(openposert/external/half)
+
 # openposert
 add_library(${PROJECT_NAME}
   src/net/input_preprocessing.cu
@@ -80,6 +83,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/include
   ${OpenCV_INCLUDE_DIRS}
+  ${half_SOURCE_DIR}/include
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
