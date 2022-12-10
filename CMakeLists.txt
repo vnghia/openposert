@@ -66,6 +66,7 @@ include(openposert/external/half)
 
 # openposert
 add_library(${PROJECT_NAME}
+  src/input/input.cu
   src/input/reoder_and_normalize.cu
   src/input/resize_and_pad_rbg.cu
 
