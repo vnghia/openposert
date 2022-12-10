@@ -72,6 +72,7 @@ add_library(${PROJECT_NAME}
   src/output/nms.cu
   src/output/paf_ptr_into_vector.cpp
   src/output/paf_score.cu
+  src/output/paf_vector_into_people_vector.cpp
 
   src/net/input_preprocessing.cu
   src/net/nms.cu
