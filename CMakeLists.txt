@@ -70,6 +70,7 @@ add_library(${PROJECT_NAME}
   src/input/resize_and_pad_rbg.cu
 
   src/output/nms.cu
+  src/output/paf_ptr_into_vector.cpp
   src/output/paf_score.cu
 
   src/net/input_preprocessing.cu
