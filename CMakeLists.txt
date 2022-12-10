@@ -66,6 +66,8 @@ include(openposert/external/half)
 
 # openposert
 add_library(${PROJECT_NAME}
+  src/input/reoder_and_normalize.cu
+
   src/net/input_preprocessing.cu
   src/net/nms.cu
   src/net/output_postprocessing.cu
