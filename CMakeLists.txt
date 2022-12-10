@@ -69,6 +69,8 @@ add_library(${PROJECT_NAME}
   src/input/reoder_and_normalize.cu
   src/input/resize_and_pad_rbg.cu
 
+  src/output/nms.cu
+
   src/net/input_preprocessing.cu
   src/net/nms.cu
   src/net/output_postprocessing.cu
