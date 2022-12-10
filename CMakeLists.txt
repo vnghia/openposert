@@ -71,6 +71,7 @@ add_library(${PROJECT_NAME}
   src/input/resize_and_pad_rbg.cu
 
   src/output/nms.cu
+  src/output/output.cu
   src/output/paf_ptr_into_vector.cpp
   src/output/paf_score.cu
   src/output/paf_vector_into_people_vector.cpp
