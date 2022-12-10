@@ -67,6 +67,7 @@ include(openposert/external/half)
 # openposert
 add_library(${PROJECT_NAME}
   src/input/reoder_and_normalize.cu
+  src/input/resize_and_pad_rbg.cu
 
   src/net/input_preprocessing.cu
   src/net/nms.cu
@@ -81,6 +82,11 @@ add_library(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_17)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  --expt-relaxed-constexpr
+  >
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/include
