@@ -6,7 +6,7 @@
 #include "minrt/utils.hpp"
 #include "opencv2/opencv.hpp"
 #include "openposert/openposert.hpp"
-#include "openposert/pose/enum.hpp"
+#include "openposert/utilities/pose_model.hpp"
 #include "spdlog/spdlog.h"
 
 using namespace openposert;

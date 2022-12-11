@@ -6,7 +6,7 @@
 
 #include "cuda_fp16.h"
 #include "half.hpp"
-#include "openposert/pose/enum.hpp"
+#include "openposert/utilities/pose_model.hpp"
 
 namespace openposert {
 

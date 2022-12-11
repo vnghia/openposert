@@ -12,7 +12,6 @@
 #include "openposert/output/paf_vector_into_people_vector.hpp"
 #include "openposert/output/people_vector_to_people_array.hpp"
 #include "openposert/output/remove_people_below_thresholds_and_fill_faces.hpp"
-#include "openposert/pose/pose_parameters.hpp"
 
 namespace openposert {
 

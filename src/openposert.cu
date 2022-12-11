@@ -8,8 +8,7 @@
 #include "openposert/input/input.hpp"
 #include "openposert/openposert.hpp"
 #include "openposert/output/output.hpp"
-#include "openposert/pose/enum.hpp"
-#include "openposert/pose/pose_parameters.hpp"
+#include "openposert/utilities/pose_model.hpp"
 #include "spdlog/fmt/bundled/ranges.h"
 #include "spdlog/spdlog.h"
 

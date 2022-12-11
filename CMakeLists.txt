@@ -78,7 +78,7 @@ add_library(${PROJECT_NAME}
   src/output/people_vector_to_people_array.cpp
   src/output/remove_people_below_thresholds_and_fill_faces.cpp
 
-  src/pose/pose_parameters.cpp
+  src/utilities/pose_model.cpp
 
   src/openposert.cu
 )
