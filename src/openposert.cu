@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "cuda_fp16.h"
-#include "half.hpp"
 #include "minrt/utils.hpp"
 #include "openposert/input/input.hpp"
 #include "openposert/openposert.hpp"
@@ -93,7 +92,7 @@ void OpenPoseRT::malloc_memory() {
                fmt::ptr(net_input_data_.get()));
 
   net_output_data_ =
-      std::static_pointer_cast<__half>(engine_.get_output_device_owned_ptr(0));
+      std::static_pointer_cast<float>(engine_.get_output_device_owned_ptr(0));
   spdlog::info("use engine output buffer at {} for net output data",
                fmt::ptr(net_output_data_.get()));
 
@@ -101,25 +100,25 @@ void OpenPoseRT::malloc_memory() {
                  net_input_data_.get(), net_input_width, net_input_height);
 
   auto pose_keypoints_size = max_person * number_body_parts * peak_dim;
-  pose_keypoints_data_.reset(new half_float::half[pose_keypoints_size]);
+  pose_keypoints_data_.reset(new float[pose_keypoints_size]);
   spdlog::info("allocated {} byte for pose keypoints data",
                pose_keypoints_size);
   std::fill_n(pose_keypoints_data_.get(), pose_keypoints_size, 0);
 
   auto pose_scores_size = max_person;
-  pose_scores_data_.reset(new half_float::half[pose_scores_size]);
+  pose_scores_data_.reset(new float[pose_scores_size]);
   spdlog::info("allocated {} byte for pose scores data", pose_scores_size);
   std::fill_n(pose_scores_data_.get(), pose_scores_size, 0);
 
   output_ =
       Output(pose_keypoints_data_.get(), pose_scores_data_.get(),
-             static_cast<half_float::half>(1), peak_dim, net_output_data_.get(),
+             static_cast<float>(1), peak_dim, net_output_data_.get(),
              net_output_width, net_output_height,
              static_cast<int>(net_output_dim.d[1]), max_joints, max_person,
              pose_model, maximize_positives, static_cast<__half>(nms_threshold),
              static_cast<__half>(inter_min_above_threshold),
              static_cast<__half>(inter_threshold), min_subset_cnt,
-             static_cast<half_float::half>(min_subset_score));
+             static_cast<float>(min_subset_score));
 }
 
 void OpenPoseRT::forward() {

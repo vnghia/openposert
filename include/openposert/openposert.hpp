@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <memory>
 
-#include "half.hpp"
 #include "minrt/minrt.hpp"
 #include "openposert/input/input.hpp"
 #include "openposert/output/output.hpp"
@@ -81,12 +80,12 @@ class OpenPoseRT {
 
   Input input_;
 
-  std::shared_ptr<__half> net_output_data_;
+  std::shared_ptr<float> net_output_data_;
 
   int number_people_;
 
-  std::shared_ptr<half_float::half[]> pose_keypoints_data_;
-  std::shared_ptr<half_float::half[]> pose_scores_data_;
+  std::shared_ptr<float[]> pose_keypoints_data_;
+  std::shared_ptr<float[]> pose_scores_data_;
 
   Output output_;
 };

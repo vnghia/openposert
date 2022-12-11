@@ -4,8 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "cuda_fp16.h"
-#include "half.hpp"
 #include "openposert/utilities/pose_model.hpp"
 
 namespace openposert {
@@ -14,26 +12,24 @@ class Output {
  public:
   Output() = default;
 
-  Output(half_float::half* pose_keypoints_ptr,
-         half_float::half* pose_scores_ptr, half_float::half scale_factor,
-         int peak_dim, __half* net_output_ptr, int net_output_width,
+  Output(float* pose_keypoints_ptr, float* pose_scores_ptr, float scale_factor,
+         int peak_dim, float* net_output_ptr, int net_output_width,
          int net_output_height, int net_output_channels, int max_joints,
          int max_peaks, const PoseModel& pose_model, bool maximize_positives,
-         __half nms_threshold, __half inter_min_above_threshold,
-         __half inter_threshold, int min_subset_cnt,
-         half_float::half min_subset_score);
+         float nms_threshold, float inter_min_above_threshold,
+         float inter_threshold, int min_subset_cnt, float min_subset_score);
 
   int process();
 
  private:
   // output
-  half_float::half* pose_keypoints_ptr_;
-  half_float::half* pose_scores_ptr_;
-  half_float::half scale_factor_;
+  float* pose_keypoints_ptr_;
+  float* pose_scores_ptr_;
+  float scale_factor_;
   int peak_dim_;
 
   // common
-  __half* net_output_ptr_;
+  float* net_output_ptr_;
   int net_output_width_;
   int net_output_height_;
   int net_output_channels_;
@@ -54,29 +50,29 @@ class Output {
 
   // param
   bool maximize_positives_;
-  __half nms_threshold_;
-  __half default_nms_threshold_;
-  __half inter_min_above_threshold_;
-  __half inter_threshold_;
+  float nms_threshold_;
+  float default_nms_threshold_;
+  float inter_min_above_threshold_;
+  float inter_threshold_;
   int min_subset_cnt_;
-  half_float::half min_subset_score_;
+  float min_subset_score_;
 
   // nms
-  std::shared_ptr<__half> peaks_data_;
+  std::shared_ptr<float> peaks_data_;
   std::shared_ptr<int> kernel_data_;
   std::array<int, 4> nms_source_size_;
   std::array<int, 4> nms_target_size_;
-  __half nms_offset_x_;
-  __half nms_offset_y_;
+  float nms_offset_x_;
+  float nms_offset_y_;
 
   // paf_score
-  std::shared_ptr<__half> pair_scores_data_;
+  std::shared_ptr<float> pair_scores_data_;
 
   // paf_ptr_into_vector
   int pair_connections_count_;
   std::shared_ptr<int[]> paf_sorted_index_;
-  std::shared_ptr<half_float::half[]> paf_total_score_data_;
-  std::shared_ptr<half_float::half[]> paf_score_data_;
+  std::shared_ptr<float[]> paf_total_score_data_;
+  std::shared_ptr<float[]> paf_score_data_;
   std::shared_ptr<int[]> paf_pair_index_data_;
   std::shared_ptr<int[]> paf_index_a_data_;
   std::shared_ptr<int[]> paf_index_b_data_;
@@ -86,7 +82,7 @@ class Output {
   int person_assigned_size_;
   int people_vector_body_size_;
   std::shared_ptr<int[]> people_vector_body_data_;
-  std::shared_ptr<half_float::half[]> people_vector_score_data_;
+  std::shared_ptr<float[]> people_vector_score_data_;
   std::shared_ptr<int[]> person_assigned_data_;
   std::shared_ptr<int[]> person_removed_data_;
 

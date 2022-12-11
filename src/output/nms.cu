@@ -1,6 +1,5 @@
 #include <array>
 
-#include "cuda_fp16.h"
 #include "openposert/output/nms.hpp"
 #include "openposert/utilities/cuda.hpp"
 #include "thrust/device_ptr.h"
@@ -12,8 +11,8 @@ const auto THREADS_PER_BLOCK_1D = 16u;
 const auto THREADS_PER_BLOCK = 512u;
 
 __global__ void nms_register_kernel(int* kernel_ptr,
-                                    const __half* const source_ptr, const int w,
-                                    const int h, const __half threshold) {
+                                    const float* const source_ptr, const int w,
+                                    const int h, const float threshold) {
   // get pixel location (x,y)
   const auto x = blockIdx.x * blockDim.x + threadIdx.x;
   const auto y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -22,7 +21,7 @@ __global__ void nms_register_kernel(int* kernel_ptr,
   const auto index = y * w + x;
 
   auto* kernel_ptr_offset = &kernel_ptr[channel_offset];
-  const __half* const source_ptr_offset = &source_ptr[channel_offset];
+  const float* const source_ptr_offset = &source_ptr[channel_offset];
 
   if (0 < x && x < (w - 1) && 0 < y && y < (h - 1)) {
     const auto value = source_ptr_offset[index];
@@ -48,12 +47,12 @@ __global__ void nms_register_kernel(int* kernel_ptr,
     kernel_ptr_offset[index] = 0;
 }
 
-__global__ void write_result_kernel(__half* output, const int length,
+__global__ void write_result_kernel(float* output, const int length,
                                     const int* const kernel_ptr,
-                                    const __half* const source_ptr,
+                                    const float* const source_ptr,
                                     const int width, const int height,
-                                    const int max_peaks, const __half offset_x,
-                                    const __half offset_y,
+                                    const int max_peaks, const float offset_x,
+                                    const float offset_y,
                                     const int offset_target) {
   __shared__ int local[THREADS_PER_BLOCK + 1];  // one more
   __shared__ int kernel0;                       // offset for kernel
@@ -88,9 +87,9 @@ __global__ void write_result_kernel(__half* output, const int length,
         // accurate peak location: considered neighbors
         if (peak_index < max_peaks)  // limitation
         {
-          __half x_acc = 0.f;
-          __half y_acc = 0.f;
-          __half score_acc = 0.f;
+          float x_acc = 0.f;
+          float y_acc = 0.f;
+          float score_acc = 0.f;
           const auto d_width = 3;
           const auto d_height = 3;
           for (auto dy = -d_height; dy <= d_height; dy++) {
@@ -102,9 +101,9 @@ __global__ void write_result_kernel(__half* output, const int length,
                 if (0 <= x && x < width)  // default width = 656
                 {
                   const auto score = source_ptr_offset[y * width + x];
-                  if (score > static_cast<__half>(0.f)) {
-                    x_acc += static_cast<__half>(x) * score;
-                    y_acc += static_cast<__half>(y) * score;
+                  if (score > static_cast<float>(0.f)) {
+                    x_acc += static_cast<float>(x) * score;
+                    y_acc += static_cast<float>(y) * score;
                     score_acc += score;
                   }
                 }
@@ -131,10 +130,10 @@ __global__ void write_result_kernel(__half* output, const int length,
   }
 }
 
-void nms(__half* target_ptr, int* kernel_ptr, const __half* const source_ptr,
-         const __half threshold, const std::array<int, 4>& target_size,
-         const std::array<int, 4>& source_size, const __half offset_x,
-         const __half offset_y) {
+void nms(float* target_ptr, int* kernel_ptr, const float* const source_ptr,
+         const float threshold, const std::array<int, 4>& target_size,
+         const std::array<int, 4>& source_size, const float offset_x,
+         const float offset_y) {
   const auto num = source_size[0];
   const auto height = source_size[2];
   const auto width = source_size[3];
