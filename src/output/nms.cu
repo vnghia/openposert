@@ -142,14 +142,6 @@ void nms(float* target_ptr, int* kernel_ptr, const float* const source_ptr,
   const auto image_offset = height * width;
   const auto offset_target = (max_peaks + 1) * target_size[3];
 
-  const dim3 threads_per_block2d{THREADS_PER_BLOCK_1D, THREADS_PER_BLOCK_1D};
-  const dim3 num_blocks2d{
-      get_number_cuda_blocks(width, threads_per_block2d.x),
-      get_number_cuda_blocks(height, threads_per_block2d.y)};
-  const dim3 threads_per_block1d{THREADS_PER_BLOCK};
-  const dim3 num_blocks1d{
-      get_number_cuda_blocks(image_offset, threads_per_block1d.x)};
-
   const dim3 threads_per_block_register{THREADS_PER_BLOCK_1D,
                                         THREADS_PER_BLOCK_1D, 1};
   const dim3 num_blocks_register{
