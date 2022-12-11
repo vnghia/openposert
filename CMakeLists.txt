@@ -61,9 +61,6 @@ find_package(OpenCV REQUIRED)
 # MinRT
 include(openposert/external/minrt)
 
-# Half
-include(openposert/external/half)
-
 # openposert
 add_library(${PROJECT_NAME}
   src/input/input.cu
@@ -94,7 +91,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/include
   ${OpenCV_INCLUDE_DIRS}
-  ${half_SOURCE_DIR}/include
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
