@@ -73,14 +73,22 @@ Output::Output(float* pose_keypoints_ptr, float* pose_scores_ptr,
   // nms
   auto peaks_size = max_joints_ * (max_peaks_ + 1) * peak_dim_ * sizeof(float);
   peaks_data_ = cuda_malloc_managed<float>(peaks_size);
+  spdlog::info("[output] allocated {} byte for peak data dims=[{}, {}, {}]",
+               peaks_size, max_joints_, max_peaks_ + 1, peak_dim_);
 
   auto kernel_size = net_output_width_ * net_output_height_ *
                      net_output_channels_ * sizeof(int);
   kernel_data_ = cuda_malloc<int>(kernel_size);
+  spdlog::info("[output] allocated {} byte for kernel data dims=[{}, {}, {}]",
+               kernel_size, net_output_channels_, net_output_height_,
+               net_output_width_);
 
   // paf_score
   auto pair_score_size = paf_total_size_ * sizeof(float);
   pair_scores_data_ = cuda_malloc_managed<float>(pair_score_size);
+  spdlog::info(
+      "[output] allocated {} byte for pair score data dims=[{}, {}, {}]",
+      pair_score_size, number_body_part_pairs_, max_peaks_, max_peaks_);
 
   // paf_ptr_into_vector
   paf_sorted_index_.reset(new int[paf_total_size_]);

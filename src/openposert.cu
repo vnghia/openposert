@@ -84,7 +84,7 @@ void OpenPoseRT::malloc_memory() {
   auto input_size =
       input_width * input_height * input_channels * sizeof(uint8_t);
   input_data_ = cuda_malloc_managed<uint8_t>(input_size);
-  spdlog::info("allocated {} byte for input data with dim", input_size);
+  spdlog::info("allocated {} byte for image input data", input_size);
 
   net_input_data_ =
       std::static_pointer_cast<__half>(engine_.get_input_device_owned_ptr(0));
@@ -101,13 +101,15 @@ void OpenPoseRT::malloc_memory() {
 
   auto pose_keypoints_size = max_person * number_body_parts * peak_dim;
   pose_keypoints_data_.reset(new float[pose_keypoints_size]);
-  spdlog::info("allocated {} byte for pose keypoints data",
-               pose_keypoints_size);
+  spdlog::info("allocated {} byte for pose keypoints data dims=[{} ,{}, {}]",
+               pose_keypoints_size * sizeof(float), max_person,
+               number_body_parts, peak_dim);
   std::fill_n(pose_keypoints_data_.get(), pose_keypoints_size, 0);
 
   auto pose_scores_size = max_person;
   pose_scores_data_.reset(new float[pose_scores_size]);
-  spdlog::info("allocated {} byte for pose scores data", pose_scores_size);
+  spdlog::info("allocated {} byte for pose scores data dims=[{}]",
+               pose_scores_size * sizeof(float), max_person);
   std::fill_n(pose_scores_data_.get(), pose_scores_size, 0);
 
   output_ =

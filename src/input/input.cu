@@ -28,8 +28,9 @@ Input::Input(uint8_t* input_ptr, int input_width, int input_height,
           static_cast<float>(net_input_height_ - 1) / (input_height - 1))) {
   auto normalized_input_size =
       input_width * input_height * input_channels * sizeof(__half);
-  spdlog::info("[input] allocated {} byte for normalized input data",
-               normalized_input_size);
+  spdlog::info(
+      "[input] allocated {} byte for normalized input data dims=[{}, {}, {}]",
+      normalized_input_size, input_channels, input_height, input_width);
   normalized_data_ = cuda_malloc<__half>(normalized_input_size);
 }
 
