@@ -15,7 +15,7 @@ namespace openposert {
 
 OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
                        int input_height, int input_channels,
-                       PoseModel pose_model, bool maximize_positive,
+                       PoseModel pose_model, bool maximize_positives,
                        float resize_factor_in, int max_joints_in,
                        int max_person_in, float nms_threshold_in,
                        float inter_min_above_threshold_in,
@@ -63,11 +63,11 @@ OpenPoseRT::OpenPoseRT(const fs::path &engine_path, int input_width,
   spdlog::info("OpenPoseRT net input width = {}, height = {}", net_input_width,
                net_input_height);
   spdlog::info(
-      "OpenposeRT parameters maximize_positive={}, resize_factor={}, "
+      "OpenposeRT parameters maximize_positives={}, resize_factor={}, "
       "max_joints={}, max_person={}, "
       "nms_threshold={}, inter_min_above_threshold={}, inter_threshold={}, "
       "min_subset_cnt={}, min_subset_score={}",
-      maximize_positive, resize_factor, max_joints, max_person, nms_threshold,
+      maximize_positives, resize_factor, max_joints, max_person, nms_threshold,
       inter_min_above_threshold, inter_threshold, min_subset_cnt,
       min_subset_score);
 
