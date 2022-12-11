@@ -1,6 +1,6 @@
 #include "cuda_fp16.h"
-#include "openposert/gpu/cuda.hpp"
 #include "openposert/input/reorder_and_normalize.hpp"
+#include "openposert/utilities/cuda.hpp"
 
 namespace openposert {
 

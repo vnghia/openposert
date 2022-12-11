@@ -1,8 +1,8 @@
 #include <array>
 
 #include "cuda_fp16.h"
-#include "openposert/gpu/cuda.hpp"
 #include "openposert/output/nms.hpp"
+#include "openposert/utilities/cuda.hpp"
 #include "thrust/device_ptr.h"
 #include "thrust/scan.h"
 

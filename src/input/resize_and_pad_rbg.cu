@@ -1,6 +1,6 @@
 #include "cuda_fp16.h"
-#include "openposert/gpu/cuda.hpp"
 #include "openposert/input/resize_and_pad_rbg.hpp"
+#include "openposert/utilities/cuda.hpp"
 #include "openposert/utilities/interpolate.hpp"
 
 namespace openposert {
