@@ -19,7 +19,7 @@ class Input {
 
  private:
   uint8_t* input_ptr_;
-  std::shared_ptr<__half> normalized_data_;
+  std::shared_ptr<__half[]> normalized_data_;
 
   int input_width_;
   int input_height_;

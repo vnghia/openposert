@@ -61,31 +61,31 @@ Output::Output(float* pose_keypoints_ptr, float* pose_scores_ptr,
   // common
   auto body_part_pair_size = body_part_pairs_.size() * sizeof(unsigned int);
   body_part_pairs_data_ =
-      cuda_malloc_managed<unsigned int>(body_part_pair_size);
+      cuda_malloc_managed<unsigned int[]>(body_part_pair_size);
   cuda_upload(body_part_pairs_data_.get(), body_part_pairs_.data(),
               body_part_pair_size);
 
   auto pose_map_idx_size = pose_map_idx_.size() * sizeof(unsigned int);
-  pose_map_idx_data_ = cuda_malloc_managed<unsigned int>(pose_map_idx_size);
+  pose_map_idx_data_ = cuda_malloc_managed<unsigned int[]>(pose_map_idx_size);
   cuda_upload(pose_map_idx_data_.get(), pose_map_idx_.data(),
               pose_map_idx_size);
 
   // nms
   auto peaks_size = max_joints_ * (max_peaks_ + 1) * peak_dim_ * sizeof(float);
-  peaks_data_ = cuda_malloc_managed<float>(peaks_size);
+  peaks_data_ = cuda_malloc_managed<float[]>(peaks_size);
   spdlog::info("[output] allocated {} byte for peak data dims=[{}, {}, {}]",
                peaks_size, max_joints_, max_peaks_ + 1, peak_dim_);
 
   auto kernel_size = net_output_width_ * net_output_height_ *
                      net_output_channels_ * sizeof(int);
-  kernel_data_ = cuda_malloc<int>(kernel_size);
+  kernel_data_ = cuda_malloc<int[]>(kernel_size);
   spdlog::info("[output] allocated {} byte for kernel data dims=[{}, {}, {}]",
                kernel_size, net_output_channels_, net_output_height_,
                net_output_width_);
 
   // paf_score
   auto pair_score_size = paf_total_size_ * sizeof(float);
-  pair_scores_data_ = cuda_malloc_managed<float>(pair_score_size);
+  pair_scores_data_ = cuda_malloc_managed<float[]>(pair_score_size);
   spdlog::info(
       "[output] allocated {} byte for pair score data dims=[{}, {}, {}]",
       pair_score_size, number_body_part_pairs_, max_peaks_, max_peaks_);

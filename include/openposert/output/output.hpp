@@ -41,8 +41,8 @@ class Output {
 
   std::vector<unsigned int> body_part_pairs_;
   std::vector<unsigned int> pose_map_idx_;
-  std::shared_ptr<unsigned int> body_part_pairs_data_;
-  std::shared_ptr<unsigned int> pose_map_idx_data_;
+  std::shared_ptr<unsigned int[]> body_part_pairs_data_;
+  std::shared_ptr<unsigned int[]> pose_map_idx_data_;
   int number_body_parts_;
   int number_body_part_pairs_;
 
@@ -58,15 +58,15 @@ class Output {
   float min_subset_score_;
 
   // nms
-  std::shared_ptr<float> peaks_data_;
-  std::shared_ptr<int> kernel_data_;
+  std::shared_ptr<float[]> peaks_data_;
+  std::shared_ptr<int[]> kernel_data_;
   std::array<int, 4> nms_source_size_;
   std::array<int, 4> nms_target_size_;
   float nms_offset_x_;
   float nms_offset_y_;
 
   // paf_score
-  std::shared_ptr<float> pair_scores_data_;
+  std::shared_ptr<float[]> pair_scores_data_;
 
   // paf_ptr_into_vector
   int pair_connections_count_;

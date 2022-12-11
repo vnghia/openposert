@@ -83,16 +83,16 @@ void OpenPoseRT::malloc_memory() {
 
   auto input_size =
       input_width * input_height * input_channels * sizeof(uint8_t);
-  input_data_ = cuda_malloc_managed<uint8_t>(input_size);
+  input_data_ = cuda_malloc_managed<uint8_t[]>(input_size);
   spdlog::info("allocated {} byte for image input data", input_size);
 
   net_input_data_ =
-      std::static_pointer_cast<__half>(engine_.get_input_device_owned_ptr(0));
+      std::static_pointer_cast<__half[]>(engine_.get_input_device_owned_ptr(0));
   spdlog::info("use engine input buffer at {} for net input data",
                fmt::ptr(net_input_data_.get()));
 
   net_output_data_ =
-      std::static_pointer_cast<float>(engine_.get_output_device_owned_ptr(0));
+      std::static_pointer_cast<float[]>(engine_.get_output_device_owned_ptr(0));
   spdlog::info("use engine output buffer at {} for net output data",
                fmt::ptr(net_output_data_.get()));
 

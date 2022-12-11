@@ -75,12 +75,12 @@ class OpenPoseRT {
  private:
   void malloc_memory();
 
-  std::shared_ptr<uint8_t> input_data_;
-  std::shared_ptr<__half> net_input_data_;
+  std::shared_ptr<uint8_t[]> input_data_;
+  std::shared_ptr<__half[]> net_input_data_;
 
   Input input_;
 
-  std::shared_ptr<float> net_output_data_;
+  std::shared_ptr<float[]> net_output_data_;
 
   int number_people_;
 

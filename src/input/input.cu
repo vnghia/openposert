@@ -31,7 +31,7 @@ Input::Input(uint8_t* input_ptr, int input_width, int input_height,
   spdlog::info(
       "[input] allocated {} byte for normalized input data dims=[{}, {}, {}]",
       normalized_input_size, input_channels, input_height, input_width);
-  normalized_data_ = cuda_malloc<__half>(normalized_input_size);
+  normalized_data_ = cuda_malloc<__half[]>(normalized_input_size);
 }
 
 void Input::process() {
