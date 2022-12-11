@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 
+#include "half.hpp"
 #include "minrt/minrt.hpp"
-#include "openposert/net/input_preprocessing.hpp"
-#include "openposert/net/output_postprocessing.hpp"
+#include "openposert/input/input.hpp"
+#include "openposert/output/output.hpp"
 #include "openposert/pose/enum.hpp"
 #include "openposert/pose/pose_parameters.hpp"
 
@@ -20,7 +22,7 @@ class OpenPoseRT {
  public:
   OpenPoseRT(const fs::path& engine_path, int input_width, int input_height,
              int input_channels, PoseModel pose_model = PoseModel::BODY_25,
-             bool maximize_positive = false, float resize_factor_in = 0,
+             bool maximize_positives = false, float resize_factor_in = 0,
              int max_joints_in = 0, int max_person_in = 0,
              float nms_threshold_in = 0, float inter_min_above_threshold_in = 0,
              float inter_threshold_in = 0, unsigned int min_subset_cnt_in = 0,
@@ -32,9 +34,7 @@ class OpenPoseRT {
 
   void forward();
 
-  const auto get_pose_keypoints() {
-    return static_cast<float*>(pose_keypoints_data_.get());
-  }
+  const auto get_pose_keypoints() { return pose_keypoints_data_.get(); }
 
   const auto get_pose_keypoints_size() {
     return number_people_ * number_body_parts * peak_dim;
@@ -46,7 +46,7 @@ class OpenPoseRT {
 
   const PoseModel pose_model;
 
-  bool maximize_positive;
+  bool maximize_positives;
 
   const nvinfer1::Dims net_input_dim;
 
@@ -72,31 +72,24 @@ class OpenPoseRT {
   const unsigned int min_subset_cnt;
   const float min_subset_score;
 
-  const std::vector<unsigned int> body_part_pair;
-  const std::vector<unsigned int> pose_map_idx;
-
   int number_body_parts;
-  int number_body_part_pairs;
 
  private:
   void malloc_memory();
 
-  std::shared_ptr<unsigned int> body_part_pair_gpu_;
-  std::shared_ptr<unsigned int> pose_map_idx_gpu_;
+  std::shared_ptr<uint8_t> input_data_;
+  std::shared_ptr<__half> net_input_data_;
 
-  std::shared_ptr<unsigned char> input_data_;
-  std::shared_ptr<float> net_input_data_;
+  Input input_;
 
-  InputPreprocessing input_preprocessing_;
-
-  std::shared_ptr<float> net_output_data_;
+  std::shared_ptr<__half> net_output_data_;
 
   int number_people_;
 
-  std::shared_ptr<float> pose_keypoints_data_;
-  std::shared_ptr<float> pose_scores_data_;
+  std::shared_ptr<half_float::half[]> pose_keypoints_data_;
+  std::shared_ptr<half_float::half[]> pose_scores_data_;
 
-  OutputPostprocessing output_postprocessing_;
+  Output output_;
 };
 
 }  // namespace openposert

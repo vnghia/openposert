@@ -78,12 +78,6 @@ add_library(${PROJECT_NAME}
   src/output/people_vector_to_people_array.cpp
   src/output/remove_people_below_thresholds_and_fill_faces.cpp
 
-  src/net/input_preprocessing.cu
-  src/net/nms.cu
-  src/net/output_postprocessing.cu
-  src/net/reoder_and_normalize.cu
-  src/net/resize_and_merge.cu
-
   src/pose/pose_parameters.cpp
 
   src/openposert.cu
