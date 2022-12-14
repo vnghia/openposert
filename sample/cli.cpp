@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 
@@ -17,7 +18,9 @@ int main(int argc, char* argv[]) {
   auto options_adder = options.add_options();
   options_adder("help", "Print help");
   options_adder("e,engine", "Engine path", cxxopts::value<fs::path>());
+  options_adder("s,skip", "Skip frame");
   options_adder("i,input", "Video input path", cxxopts::value<fs::path>());
+  options_adder("o,output", "Video output path", cxxopts::value<fs::path>());
   auto args = options.parse(argc, argv);
 
   if (args.count("help")) {
@@ -26,11 +29,26 @@ int main(int argc, char* argv[]) {
   }
 
   cv::VideoCapture cap(args["input"].as<fs::path>());
+  cv::VideoWriter writer;
 
   auto input_width = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
   auto input_height = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
   auto input_channels = static_cast<size_t>(cap.get(cv::CAP_PROP_CHANNEL));
+  auto fps = cap.get(cv::CAP_PROP_FPS);
   input_channels = (input_channels > 0) ? input_channels : 3;
+
+  bool has_output = args.count("output");
+  bool should_skip = args.count("skip");
+
+  if (has_output) {
+    spdlog::info("write output to {} with fps {}",
+                 fs::weakly_canonical(args["output"].as<fs::path>()).string(),
+                 should_skip ? fps / 2 : fps);
+    writer.open(args["output"].as<fs::path>(),
+                cv::VideoWriter::fourcc('M', 'J', 'P', 'G'),
+                should_skip ? fps / 2 : fps,
+                cv::Size(input_width, input_height));
+  }
 
   auto openposert = OpenPoseRT(
       args["engine"].as<fs::path>(), input_width, input_height, input_channels,
@@ -43,7 +61,7 @@ int main(int argc, char* argv[]) {
 
   unsigned long frame_count = 0;
   while (cap.read(frame)) {
-    if (++frame_count % 2 == 0) continue;
+    if (should_skip && (++frame_count % 2 == 0)) continue;
 
     openposert.forward();
 
@@ -55,8 +73,13 @@ int main(int argc, char* argv[]) {
                                openposert.net_output_width),
                  5, cv::Scalar(0, 0, 255), -1);
     }
-    cv::imshow("OpenPoseRT", frame);
-    if (cv::waitKey(1) >= 0) break;
+
+    if (has_output) {
+      writer.write(frame);
+    } else {
+      cv::imshow("OpenPoseRT", frame);
+      if (cv::waitKey(1) >= 0) break;
+    }
   }
 
   return 0;
