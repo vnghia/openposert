@@ -32,7 +32,7 @@ class OpenPoseRT {
 
   void forward();
 
-  const auto get_pose_keypoints() { return pose_keypoints_data_.get(); }
+  auto get_pose_keypoints() { return pose_keypoints_data_.get(); }
 
   const auto get_pose_keypoints_size() {
     return number_people_ * number_body_parts * peak_dim;
